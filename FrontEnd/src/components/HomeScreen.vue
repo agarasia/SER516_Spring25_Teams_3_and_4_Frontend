@@ -89,7 +89,8 @@ export default {
       { value: 'LCOMHS', label: 'LCOMHS' },
       { value: 'DefectScore', label: 'Defect Score' },
       { value: 'AfferentCoupling', label: 'Afferent Coupling' },
-      { value: 'EfferentCoupling', label: 'Efferent Coupling' }
+      { value: 'EfferentCoupling', label: 'Efferent Coupling' },
+      { value: 'DefectDensityAnalysis', label: 'Defect Density Analysis' }
     ];
 
     const isValidGitHubUrl = (url) => {
