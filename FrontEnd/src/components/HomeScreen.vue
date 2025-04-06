@@ -123,6 +123,8 @@ export default {
             benchmarkKey = 'lcomhs_benchmark';
           } else if (metric === 'DefectScore') {
             benchmarkKey = 'defect_score_benchmark';
+          } else if (metric === 'AfferentCoupling') {
+            benchmarkKey = 'afferent_coupling_benchmark';
           }
           if (response.data[metric] && response.data[metric][benchmarkKey] !== undefined) {
             benchmarks[metric] = response.data[metric][benchmarkKey];
