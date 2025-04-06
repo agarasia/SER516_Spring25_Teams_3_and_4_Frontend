@@ -87,7 +87,8 @@ export default {
     const availableMetrics = [
       { value: 'LCOM4', label: 'LCOM4' },
       { value: 'LCOMHS', label: 'LCOMHS' },
-      { value: 'DefectScore', label: 'Defect Score' }
+      { value: 'DefectScore', label: 'Defect Score' },
+      { value: 'AfferentCoupling', label: 'Afferent Coupling' }
     ];
 
     const isValidGitHubUrl = (url) => {
