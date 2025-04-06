@@ -88,7 +88,8 @@ export default {
       { value: 'LCOM4', label: 'LCOM4' },
       { value: 'LCOMHS', label: 'LCOMHS' },
       { value: 'DefectScore', label: 'Defect Score' },
-      { value: 'AfferentCoupling', label: 'Afferent Coupling' }
+      { value: 'AfferentCoupling', label: 'Afferent Coupling' },
+      { value: 'EfferentCoupling', label: 'Efferent Coupling' }
     ];
 
     const isValidGitHubUrl = (url) => {
