@@ -127,6 +127,8 @@ export default {
             benchmarkKey = 'afferent_coupling_benchmark';
           }  else if (metric === 'EfferentCoupling') {
             benchmarkKey = 'efferent_coupling_benchmark';
+          }else if (metric === 'DefectDensityAnalysis') {
+            benchmarkKey = 'defect_density_analysis_benchmark';
           }
           if (response.data[metric] && response.data[metric][benchmarkKey] !== undefined) {
             benchmarks[metric] = response.data[metric][benchmarkKey];
