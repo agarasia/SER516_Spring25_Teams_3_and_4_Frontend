@@ -1,0 +1,31 @@
+name: CI/CD - Frontend
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./Frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./Frontend
