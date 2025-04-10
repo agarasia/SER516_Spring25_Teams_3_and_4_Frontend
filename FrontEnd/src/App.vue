@@ -22,24 +22,26 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
-html, body {
-  margin: 0;
-  padding: 0;
+html,
+body {
   height: 100%;
+  margin: 0;
 }
 
 body {
-  display: flex;
-  flex-direction: column;
 }
 
-header, footer {
-  /* They can be auto-height, or whatever height you prefer */
-  flex: 0 0 auto;
+
+
+header,
+footer {
+  flex: 0 0 auto;           /* keep their natural height */
+  width: 100%;
 }
 
+/* Main grows/shrinks and scrolls if necessary */
 main {
-  flex: 1 0 auto; /* fills remaining vertical space */
-  overflow-y: auto; /* scrolls if content is too tall */
+  flex: 1 0 auto;           /* fills the leftover space */
+  overflow-y: auto;
 }
 </style>
