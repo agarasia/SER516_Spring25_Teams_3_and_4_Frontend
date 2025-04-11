@@ -15,457 +15,307 @@
         <polyline points="10 18 4 12 10 6"></polyline>
       </svg>
     </button>
-    <!-- Cards for current metric values -->
+
+    <!-- snapshot card -->
     <div class="cards-container">
-      <!-- Current LCOM4 (Filtered by selectedClass) -->
-      <div v-if="filteredLCOM4Data.length" class="card">
-        <h3>LCOM4</h3>
-        <div
-          v-for="item in filteredLCOM4Data"
-          :key="item.class_name"
-          class="card-content"
-        >
-          <div class="info-row">
-            <span class="label">Class Name:</span>
-            <span class="value">{{ item.class_name }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Score:</span>
-            <span class="value">{{ item.score }}</span>
-          </div>
-        </div>
-      </div>
+      <div
+        v-for="card in snapshotCards"
+        :key="card.metric.value"
+        class="card"
+      >
+        <h3>{{ card.metric.label }}</h3>
 
-      <!-- LCOMHS Card -->
-      <div v-if="filteredLCOMHSData.length" class="card">
-        <h3>LCOMHS</h3>
-        <div
-          v-for="item in filteredLCOMHSData"
-          :key="item.class_name"
-          class="card-content"
-        >
-          <div class="info-row">
-            <span class="label">Class Name:</span>
-            <span class="value">{{ item.class_name }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Score:</span>
-            <span class="value">{{ item.score }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Current Defect Score -->
-      <div v-if="computedData.DefectScore?.current_defect_score?.data" class="card">
-        <h3>Defect Score</h3>
-        <div class="card-content">
-          <div class="info-row">
-            <span class="label">Total Defects:</span>
-            <span class="value">{{ computedData.DefectScore.current_defect_score.data.total_defects }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Weighted Average Severity:</span>
-            <span class="value">{{ computedData.DefectScore.current_defect_score.data.weighted_average_severity }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Max Severity:</span>
-            <span class="value">{{ computedData.DefectScore.current_defect_score.data.max_severity }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Min Severity:</span>
-            <span class="value">{{ computedData.DefectScore.current_defect_score.data.min_severity }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Standard Deviation:</span>
-            <span class="value">{{ computedData.DefectScore.current_defect_score.data.std_dev_severity }}</span>
+        <!-- NEW wrapper -->
+        <div class="card-body">
+          <div
+            class="card-row"
+            v-for="row in card.rows"
+            :key="row.label"
+          >
+            <span class="label">{{ row.label }}:</span>
+            <span class="value">{{ row.value }}</span>
           </div>
         </div>
       </div>
     </div>
-    <br>
-    <div v-if="computedData.LCOM4 || computedData.LCOMHS">
-      <!-- LCOM Metrics Section -->
-      <h2>LCOM Metrics Over Time</h2>
-      <br>
-        <div class="controls">
-          <div class="control-group">
-            <label for="class-select">Select Class:</label>
-            <select id="class-select" v-model="selectedClass" v-if="classNames.length">
-              <option v-for="className in classNames" :key="className" :value="className">
-                {{ className }}
-              </option>
-            </select>
-          </div>
-          <div class="control-group">
-            <label for="metric-select">Select Metric:</label>
-            <select id="metric-select" v-model="selectedMetric">
-              <option v-for="metric in availableLCOMMetrics" :key="metric" :value="metric">
-                {{ metric }}
-              </option>
-            </select>
-          </div>
-        </div>
-      <!-- LCOM Chart (only shows when a valid metric is selected) -->
-      <div class="chart-container">
-        <Line :data="chartData" :options="chartOptions" />
-      </div>
+    <!-- metric selector -->
+    <div class="controls">
+      <label for="metric">Metric:</label>
+      <select id="metric" v-model="selectedMetric">
+        <option v-for="m in availableMetrics" :key="m.value" :value="m.value">
+          {{ m.label }}
+        </option>
+      </select>
+
+      <!-- class selector (only when we have classNames) -->
+      <template v-if="hasClassData">
+        <label for="cls">Class:</label>
+        <select id="cls" v-model="selectedClass">
+          <option v-for="c in classNames" :key="c" :value="c">{{ c }}</option>
+        </select>
+      </template>
     </div>
 
-    <!-- DefectScore Visualization -->
-    <div v-if="computedData.DefectScore">
-      <h2>Defect Score Over Time</h2>
-      <div class="chart-container">
-        <Line :data="defectScoreChartData" :options="defectScoreChartOptions" />
+    <!-- <div class="card" v-if="cardRows.length">
+      <h3>{{ metricCfg(selectedMetric).label }}</h3>
+      <div class="card-content" v-for="row in cardRows" :key="row.label">
+        <div class="info-row">
+          <span class="label">{{ row.label }}:</span>
+          <span class="value">{{ row.value }}</span>
+        </div>
       </div>
+    </div> -->
+
+    <!-- history chart -->
+    <div class="chart-container" v-if="chartData.labels.length">
+      <Line :data="chartData" :options="chartOptions" />
     </div>
   </div>
 </template>
 
 
-<script>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
 import { Line } from 'vue-chartjs';
 import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  LineElement,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  Filler
+  Chart as ChartJS, Title, Tooltip, Legend,
+  LineElement, CategoryScale, LinearScale, PointElement, Filler
 } from 'chart.js';
-import { computed, ref, watch } from 'vue';
+import { METRICS, metricCfg, type MetricCfg } from '@/metricsConfig';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, Filler);
 
-export default {
-  components: { Line },
-  props: {
-    computedData: Object,
-    benchmarks: Object,
-    showBenchmarkLines: Object
-  },
-  setup(props) {
-    const selectedClass = ref('');
-    // Mapping keys for LCOM metrics (DefectScore uses a different structure)
-    const metricKeyMap = {
-      LCOM4: { current: 'current_lcom4', history: 'lcom4_history' },
-      LCOMHS: { current: 'current_lcomhs', history: 'lcomhs_history' }
-    };
+const props = defineProps<{
+  computedData: Record<string, any>;
+  benchmarks:   Record<string, number>;
+  showBenchmarkLines: Record<string, boolean>;
+}>();
 
-    // Compute only those LCOM metrics that have data (i.e. non-empty history arrays)
-    const availableLCOMMetrics = computed(() => {
-      const metrics = ['LCOM4', 'LCOMHS'];
-      return metrics.filter(metric => {
-        const historyKey = metricKeyMap[metric].history;
-        const currentKey = metricKeyMap[metric].current;
-        return (
-          props.computedData[metric] &&
-          (
-            (Array.isArray(props.computedData[metric][historyKey]) &&
-             props.computedData[metric][historyKey].length > 0) ||
-            (props.computedData[metric][currentKey] &&
-             Array.isArray(props.computedData[metric][currentKey].data) &&
-             props.computedData[metric][currentKey].data.length > 0)
-          )
-        );
-      });
-    });
 
-    // Selected metric for LCOM metrics.
-    // Initialize to the first available metric if one exists.
-    const selectedMetric = ref(
-      availableLCOMMetrics.value.length > 0 ? availableLCOMMetrics.value[0] : ''
-    );
-    // Update the selected metric if the available list changes
-    watch(availableLCOMMetrics, (newMetrics) => {
-      if (newMetrics.length && !newMetrics.includes(selectedMetric.value)) {
-        selectedMetric.value = newMetrics[0];
-      }
-    }, { immediate: true });
 
-    // Compute class names for the selected LCOM metric.
-    const classNames = computed(() => {
-      const currentKey = metricKeyMap[selectedMetric.value]?.current;
-      const metricData = props.computedData[selectedMetric.value]?.[currentKey]?.data || [];
-      return [...new Set(metricData.map(entry => entry.class_name))];
-    });
+const selectedMetric = ref<string>(METRICS[0].value);
+const selectedClass  = ref<string>('');
 
-    // Set a default class when available class names change.
-    watch(classNames, (newClassNames) => {
-      if (newClassNames.length && !newClassNames.includes(selectedClass.value)) {
-        selectedClass.value = newClassNames[0];
-      }
-    }, { immediate: true });
 
-    // Filtered data for LCOM4
-    const filteredLCOM4Data = computed(() => {
-      if (!props.computedData.LCOM4?.current_lcom4?.data || !props.computedData.LCOM4.current_lcom4.data.length) {
-        return [];
-      }
-      return props.computedData.LCOM4.current_lcom4.data.filter(
-        item => item.class_name === selectedClass.value
-      );
-    });
+const availableMetrics = computed(() =>
+  METRICS.filter(m => !!props.computedData[m.value])
+);
 
-    // Filtered data for LCOMHS
-    const filteredLCOMHSData = computed(() => {
-      if (!props.computedData.LCOMHS?.current_lcomhs?.data || !props.computedData.LCOMHS.current_lcomhs.data.length) {
-        return [];
-      }
-      return props.computedData.LCOMHS.current_lcomhs.data.filter(
-        item => item.class_name === selectedClass.value
-      );
-    });
-    // LCOM Chart Data (for LCOM4 and LCOMHS)
-    const chartData = computed(() => {
-      if (!props.computedData[selectedMetric.value]) return { labels: [], datasets: [] };
+const hasClassData = computed(() =>
+  metricCfg(selectedMetric.value).classScoped === true
+);
 
-      const historyKey = metricKeyMap[selectedMetric.value].history;
-      let dataPoints = (props.computedData[selectedMetric.value]?.[historyKey] || [])
-        .map(entry => {
-          const classData = entry.data.find(item => item.class_name === selectedClass.value);
-          return { timestamp: entry.timestamp, score: classData ? classData.score : null };
-        })
-        .filter(entry => entry.score !== null);
-        dataPoints = dataPoints.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+watch(availableMetrics, ms => {
+  if (!ms.find(m => m.value === selectedMetric.value)) {
+    selectedMetric.value = ms[0]?.value ?? '';
+  }
+});
 
-      // Append the current value from the current object if available.
-      const currentKey = metricKeyMap[selectedMetric.value].current;
-      const currentObj = props.computedData[selectedMetric.value]?.[currentKey];
-      if (currentObj && currentObj.data) {
-        const currentClassData = currentObj.data.find(item => item.class_name === selectedClass.value);
-        if (currentClassData) {
-          dataPoints.push({
-            timestamp: currentObj.timestamp,
-            score: currentClassData.score
-          });
-        }
-      }
+const cfg = computed(() => metricCfg(selectedMetric.value));
 
-      const labels = dataPoints.map(entry => new Date(entry.timestamp).toLocaleString());
-      const dataArray = dataPoints.map(entry => entry.score);
-      const defaultColor = selectedMetric.value === 'LCOMHS' ? 'blue' : 'red';
-      const highlightColor = 'orange';
-      const pointBackgroundColor = dataPoints.map((_, index) =>
-        index === dataPoints.length - 1 ? highlightColor : defaultColor
-      );
-      const pointRadius = dataPoints.map((_, index) =>
-        index === dataPoints.length - 1 ? 8 : 3
-      );
-      
-      const datasets = [{
-          label: `${selectedMetric.value} Score for ${selectedClass.value}`,
-          data: dataArray,
-          borderColor: defaultColor,
-          backgroundColor: selectedMetric.value === 'LCOMHS'
-            ? 'rgba(0, 0, 255, 0.1)'
-            : 'rgba(255, 0, 0, 0.1)',
-          fill: true,
-          pointBackgroundColor,
-          pointRadius
-        }];
+/* ---------- class names ---------- */
+const classNames = computed<string[]>(() => {
+  if (!hasClassData.value) return [];
 
-      // Create benchmark data points for the entire timeline.
-      if(props.showBenchmarkLines &&
-          props.showBenchmarkLines[selectedMetric.value] &&
-          props.benchmarks &&
-          props.benchmarks[selectedMetric.value] !== undefined) {
-        const benchmarkValue = props.benchmarks[selectedMetric.value];
-        const benchmarkData = labels.map(() => benchmarkValue); 
-        
-        datasets.push({
-            label: 'Benchmark',
-            data: benchmarkData,
-            borderColor: 'green', // or any color you prefer
-            borderDash: [5, 5],   // This creates a dotted line effect
-            fill: false,
-            pointRadius: 0        // Hide points for benchmark line
-          });
-      }
-     
-      return {
-        labels,
-        datasets: datasets
-        };
-    });
+  const curArr = props.computedData[selectedMetric.value]
+                    ?. [cfg.value.currentKey]?.data;
 
-    // LCOM Chart Options with dynamic Y-axis scaling for LCOMHS
-    const chartOptions = computed(() => {
-      const yOptions = { beginAtZero: true };
-      if (selectedMetric.value === 'LCOMHS') {
-        yOptions.min = 0;
-        yOptions.max = 2;
-      }
-      return {
-        responsive: true,
-        plugins: { legend: { display: true } },
-        scales: { y: yOptions }
-      };
-    });
+  if (!Array.isArray(curArr)) return [];   // <‑‑ guard
 
-    // DefectScore Chart Data – note the structure is different from LCOM metrics
-    const defectScoreChartData = computed(() => {
-      if (!props.computedData.DefectScore) return { labels: [], datasets: [] };
+  const names = curArr
+    .map((e: any) => e.class_name)
+    .filter((n: string | undefined) => !!n);
 
-      let history = props.computedData.DefectScore.defect_score_history || [];
-      history = history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      const labels = history.map(entry => new Date(entry.timestamp).toLocaleString());
-      const totalDefectsData = history.map(entry => entry.data.total_defects);
-      const weightedAvgData = history.map(entry => entry.data.weighted_average_severity);
-      const maxSeverityData = history.map(entry => entry.data.max_severity);
-      const stdDevSeverityData = history.map(entry => entry.data.std_dev_severity);
-      const minSeverityData = history.map(entry => entry.data.min_severity);
-      const current = props.computedData.DefectScore.current_defect_score;
-      if (current && current.data) {
-        labels.push(new Date(current.timestamp).toLocaleString());
-        totalDefectsData.push(current.data.total_defects);
-        weightedAvgData.push(current.data.weighted_average_severity);
-        maxSeverityData.push(current.data.max_severity);
-        stdDevSeverityData.push(current.data.std_dev_severity);
-        minSeverityData.push(current.data.min_severity);
-      }
-      if (props.showBenchmarkLines &&
-        props.showBenchmarkLines.DefectScore &&
-        props.benchmarks &&
-        props.benchmarks.DefectScore !== undefined)
-      {
-        const benchmarkValue = props.benchmarks["DefectScore"];
-        const benchmarkData = labels.map(() => benchmarkValue);
-        const defaultColor = 'red';
-        const highlightColor = 'orange';
-        const pointBackgroundColor = totalDefectsData.map((_, index) =>
-          index === totalDefectsData.length - 1 ? highlightColor : defaultColor
-        );
-        const pointRadius = totalDefectsData.map((_, index) =>
-          index === totalDefectsData.length - 1 ? 8 : 3
-        );
-        return {
-          labels,
-          datasets: [
-            {
-              label: 'Total Defects',
-              data: totalDefectsData,
-              borderColor: 'green',
-              backgroundColor: 'rgba(0, 255, 0, 0.1)',
-              fill: true,
-              pointBackgroundColor,
-              pointRadius
-            },
-            {
-              label: 'Weighted Avg Severity',
-              data: weightedAvgData,
-              borderColor: 'purple',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true,
-              pointBackgroundColor,
-              pointRadius
-            },
-            {
-              label: 'Max Severity',
-              data: maxSeverityData,
-              borderColor: 'cyan',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true,
-              pointBackgroundColor,
-              pointRadius
-            },
-            {
-              label: 'Min Severity',
-              data: minSeverityData,
-              borderColor: 'blue',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true,
-              pointBackgroundColor,
-              pointRadius
-            },
-            {
-              label: 'Standard Deviation Severity',
-              data: stdDevSeverityData,
-              borderColor: 'magenta',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true,
-              pointBackgroundColor,
-              pointRadius
-            },
-            {
-              label: 'Benchmark',
-              data: benchmarkData,
-              borderColor: 'green', // or any color you prefer
-              borderDash: [5, 5],   // This creates a dotted line effect
-              fill: false,
-              pointRadius: 0        // Hide points for benchmark line
-            }
-          ]
-        };
-      }
-      else {
-        return {
-          labels,
-          datasets: [
-            {
-              label: 'Total Defects',
-              data: totalDefectsData,
-              borderColor: 'green',
-              backgroundColor: 'rgba(0, 255, 0, 0.1)',
-              fill: true
-            },
-            {
-              label: 'Weighted Avg Severity',
-              data: weightedAvgData,
-              borderColor: 'purple',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true
-            },
-            {
-              label: 'Max Severity',
-              data: maxSeverityData,
-              borderColor: 'cyan',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true
-            },
-            {
-              label: 'Min Severity',
-              data: minSeverityData,
-              borderColor: 'blue',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true
-            },
-            {
-              label: 'Standard Deviation Severity',
-              data: stdDevSeverityData,
-              borderColor: 'magenta',
-              backgroundColor: 'rgba(128, 0, 128, 0.1)',
-              fill: true
-            }
-          ]
-        };
-      }
-    });
+  return Array.from(new Set(names));
+});
 
-    // Options for the DefectScore chart
-    const defectScoreChartOptions = computed(() => ({
-      responsive: true,
-      plugins: { legend: { display: true } },
-      scales: { y: { beginAtZero: true } }
-    }));
+watch(classNames, (names: string[]) => {
+  if (names.length && !names.includes(selectedClass.value)) {
+    selectedClass.value = names[0];
+  }
+});
+
+/* ---------- helpers to normalise current & history ---------- */
+function currentData(metricVal: string) {
+  const c = metricCfg(metricVal);
+  return props.computedData[metricVal]?.[c.currentKey];
+}
+function historyData(metricVal: string) {
+  const c = metricCfg(metricVal);
+  return c.historyKey
+    ? props.computedData[metricVal]?.[c.historyKey] ?? []
+    : [];
+}
+
+/* ---------- per‑metric card content ---------- */
+const cardRows = computed(() => {
+  const cur = currentData(selectedMetric.value);
+  if (!cur) return [];
+
+  /* if data is an array of {class_name, score} */
+  if (Array.isArray(cur.data)) {
+    return cur.data
+      .filter((d: any) =>
+        d.class_name ? d.class_name === selectedClass.value : true)
+      .map((d: any) => ({
+        label: d.class_name ?? 'Score',
+        value: d.score ?? JSON.stringify(d)
+      }));
+  }
+  /* scalar object – use all keys except details/git ids */
+  return Object.entries(cur.data ?? cur)
+    .filter(([k]) => !['details', 'gitUniqueId'].includes(k))
+    .map(([k, v]) => ({ label: k.replace(/_/g, ' '), value: v }));
+});
+
+
+function rowsFor(metricVal: string) {
+  const cur = currentData(metricVal);
+  if (!cur) {
+    console.warn(`No current data for ${metricVal} – check currentKey in metricsConfig`);
+    return [];
+  }
+
+  const cfgObj = metricCfg(metricVal);
+
+  /* -------- class‑scoped array -------- */
+  if (cfgObj.classScoped && Array.isArray(cur.data)) {
+    let row = cur.data.find((d: any) => d.class_name === selectedClass.value);
+
+    /* fallback: first class in that metric if selectedClass not present */
+    if (!row && cur.data.length) row = cur.data[0];
+
+    if (!row) return [];                       // still nothing? give up
+    return [{ label: row.class_name, value: row.score }];
+  }
+
+  /* -------- scalar number -------- */
+  if (typeof cur === 'number' || typeof cur.data === 'number') {
+    const val = typeof cur === 'number' ? cur : cur.data;
+    return [{ label: 'Value', value: val }];
+  }
+
+  /* -------- object with numeric fields -------- */
+  const src = cur.data ?? cur;
+  return Object.entries(src)
+    .filter(([, v]) => typeof v === 'number')
+    .map(([k, v]) => ({ label: k.replace(/_/g, ' '), value: v }));
+}
+
+/* convenience computed so the template loops cleanly */
+const snapshotCards = computed(() =>
+  availableMetrics.value.map(m => ({
+    metric: m,
+    rows: rowsFor(m.value)
+  })).filter(c => c.rows.length)      // show only if we have something to display
+);
+
+
+/* ---------- chart data (works for any metric with numeric history) ---------- */
+const chartData = computed(() => {
+  const hist = historyData(selectedMetric.value);
+  const cur  = currentData(selectedMetric.value);
+
+  type Point = { ts: string; series: string; val: number };
+  const pts: Point[] = [];
+
+  /* helper to push one point */
+  const push = (ts: string, series: string, val: number) =>
+    pts.push({ ts, series, val });
+
+  /* ------- history ------- */
+  hist.forEach((h: any) => {
+    if (Array.isArray(h.data)) {
+      /* class‑level score */
+      const row = h.data.find((r: any) =>
+        !hasClassData.value || r.class_name === selectedClass.value);
+      if (row) push(h.timestamp, 'score', row.score);
+    } else if (h.data?.defectDensity) {
+      push(h.timestamp, 'defectDensity', h.data.defectDensity);
+    } else if (typeof h.data === 'object') {
+      Object.entries(h.data)
+        .filter(([, v]) => typeof v === 'number')
+        .forEach(([k, v]) => push(h.timestamp, k, v as number));
+    }
+  });
+
+  /* ------- current ------- */
+  if (cur) {
+    if (Array.isArray(cur.data)) {
+      const row = cur.data.find((r: any) =>
+        !hasClassData.value || r.class_name === selectedClass.value);
+      if (row) push(cur.timestamp, 'score', row.score);
+    } else if (typeof cur === 'number' || typeof cur.data === 'number') {
+      const val = typeof cur === 'number' ? cur : cur.data;
+      push(cur.timestamp, 'value', val);
+    } else {
+      const src = cur.data ?? cur;
+      Object.entries(src)
+        .filter(([, v]) => typeof v === 'number')
+        .forEach(([k, v]) => push(cur.timestamp, k, v as number));
+    }
+  }
+
+  /* group by series name */
+  const labels = Array.from(new Set(pts.map(p => p.ts)))
+                      .sort()
+                      .map(ts => new Date(ts).toLocaleString());
+
+  const seriesMap: Record<string, number[]> = {};
+  pts.forEach(p => {
+    if (!seriesMap[p.series]) seriesMap[p.series] = Array(labels.length).fill(null);
+    const idx = labels.indexOf(new Date(p.ts).toLocaleString());
+    seriesMap[p.series][idx] = p.val;
+  });
+
+  const datasets = Object.entries(seriesMap).map(([name, data], i) => {
+    const palette = ['red','blue','green','purple','orange','cyan','magenta'];
+    const baseColor = palette[i % palette.length];
+
+    /* make an array of radii: small everywhere, big on last point */
+    const radii = data.map((_, idx) => idx === data.length - 1 ? 6 : 2);
+
+    /* optional: tint the last point */
+    const bgColors = data.map((_, idx) =>
+      idx === data.length - 1 ? "orange" : baseColor);
 
     return {
-      availableLCOMMetrics,
-      selectedMetric,
-      selectedClass,
-      classNames,
-      chartData,
-      chartOptions,
-      defectScoreChartData,
-      defectScoreChartOptions,
-      computedData: props.computedData,
-      filteredLCOM4Data,
-      filteredLCOMHSData
+      label: name.replace(/_/g, ' '),
+      data,
+      borderColor: baseColor,
+      backgroundColor: 'rgba(0,0,0,0.05)',
+      pointBorderColor: baseColor,
+      pointBackgroundColor: bgColors,
+      pointRadius: radii,
+      pointStyle: 'circle',
+      borderDash: [0, 0],
+      fill: true
     };
+  });
+
+  /* add benchmark lines */
+  if (props.benchmarks[selectedMetric.value] && props.showBenchmarkLines[selectedMetric.value]) {
+    datasets.push({
+      label: 'Benchmark',
+      data: Array(labels.length).fill(props.benchmarks[selectedMetric.value]),
+      borderColor: 'green',
+      borderDash: [5, 5], // dashed line
+      pointRadius: Array(labels.length).fill(0), // no points
+      pointBorderColor: 'green',
+      pointBackgroundColor: Array(labels.length).fill('rgba(0,0,0,0)'),
+      backgroundColor: 'rgba(0,0,0,0.05)',
+      pointStyle: 'circle',
+      fill: false
+    });
   }
-};
+
+  return { labels, datasets };
+});
+
+/* keep options simple – you can extend later */
+const chartOptions = { responsive: true, plugins: { legend: { display: true } } };
+
 </script>
 
 <style scoped>
@@ -498,14 +348,14 @@ select {
   justify-content: center;
   margin: 2rem auto;
 }
-
-/* Card styling */
 .card {
   background: #537895;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   width: 300px;
-  padding: 0.5rem;
+  height: 200px;              /* 👈 fixed card height */
+  display: flex;
+  flex-direction: column;
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
@@ -514,27 +364,38 @@ select {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Card header styling */
+/* Header */
 .card h3 {
-  margin: 0 0 1rem;
-  font-size: 1.5rem;
+  margin: 0;
+  padding: 0.75rem 0.5rem;
+  font-size: 1.4rem;
   color: #fff;
   text-align: center;
+  border-bottom: 1px dashed rgba(255,255,255,0.3);
 }
 
-/* Content rows */
-.card-content {
-  margin-bottom: 1rem;
-  border-bottom: 1px dashed #e0e0e0;
-  padding: 1rem;
-  height: 50px;          /* Fixed smaller height */
-  overflow-y:scroll;
+/* ───── Scrollable body ───── */
+.card-body {
+  flex: 1 1 auto;             /* take remaining space */
+  overflow-y: auto;           /* one scrollbar per card */
+  padding: 0.5rem;
 }
 
-.card-content:last-child {
-  border-bottom: none;
+/* Each row */
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
 }
 
+.card-row .label {
+  font-weight: bold;
+  color: #fff;
+}
+
+.card-row .value {
+  color: #fff;
+}
 /* Label and value styling */
 .info-row {
   display: flex;
