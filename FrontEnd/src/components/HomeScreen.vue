@@ -67,7 +67,7 @@
                 <label :for="`benchmark-${metric.value}`">
                   {{ metric.label }} Benchmark:
                 </label>
-                <input type="number" :id="`benchmark-${metric.value}`" v-model.number="benchmarkInputs[metric.value]"
+                <input type="number" :id="`benchmark-${metric.value}`" v-model.number="benchmarkInputs[metric.benchmarkKey]"
                   :placeholder="`Enter ${metric.label} benchmark`" />
               </div>
             </div>
@@ -137,7 +137,7 @@ export default {
         );
         selectedMetrics.value.forEach(m => {
           const key = metricCfg(m).benchmarkKey;
-          benchmarks[m] = data[m]?.[key] ?? 0;
+          benchmarks[m] = data[key] ?? 0;
         });
       } catch (error) {
         console.error('Error fetching benchmarks:', error);
@@ -169,7 +169,7 @@ export default {
       await Promise.all([fetchBenchmarks(), fetchTagsIfNeeded()]);
 
       metrics.forEach(m => {
-        benchmarkInputs[m] = benchmarks[m] ?? '';
+        benchmarkInputs[metricCfg(m).benchmarkKey] = benchmarks[m] ?? '';
         showBenchmarkLines[m] = true;
       });
     });
