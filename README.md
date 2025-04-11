@@ -192,18 +192,19 @@ Note that unless and until you see the message `Valid GitHub repository`, the op
   
   
 
-#### Select one or more metrics to calculate: //change the images below
+#### Select one or more metrics to calculate:
 
 Now that you have a valid GitHub URL and it is validated, you would now see that the checkboxes for metrics are clickable.
 
-![image](https://github.com/user-attachments/assets/ea8aa9f4-b857-4908-820e-fe91df4dbc9b)
+<img width="1385" alt="Screenshot 2025-04-11 at 4 39 11 PM" src="https://github.com/user-attachments/assets/76c168b6-b36b-40e8-a09c-4c9192d3f88a" />
 
-  
+
   
 
 You can click on one or more metrics (say for instance, you want to calculate LCOM4 and Defect Score) simply by clicking on the corresponding checkboxes.
 
-![image](https://github.com/user-attachments/assets/e81514ab-89f1-41f2-8a9a-db315135bdac)
+<img width="1379" alt="Screenshot 2025-04-11 at 4 39 31 PM" src="https://github.com/user-attachments/assets/061f8554-6f2c-4126-b39b-da4b71d4b4a4" />
+
 
   
   
@@ -313,11 +314,10 @@ You would also notice that under the LCOM4 benchmark, the show benchmark checkbo
   
 
 Additionally, you can also do something as a mix of the two, say I want to set a new benchmark score for LCOM4 but do not want to see the benchmark in the chart. I can type a new benchmark score within the textbox but still keep the checkbox unchecked.
-
-## change the image below
   
 
-![image](https://github.com/user-attachments/assets/389b923b-fddc-49d2-83e3-d83ba0a8fc97)
+<img width="1322" alt="Screenshot 2025-04-11 at 4 40 11 PM" src="https://github.com/user-attachments/assets/5f9959b1-6f78-47eb-8107-70a58428964b" />
+
 
   
 
@@ -325,7 +325,8 @@ Once the *Apply/Continue* button is clicked, the results would be shown for the 
 
 ## change the image below only
 
-![image](https://github.com/user-attachments/assets/972463d1-bab7-4ace-b992-c09209259e10)
+![WhatsApp Image 2025-04-11 at 4 53 30 PM](https://github.com/user-attachments/assets/f1c3deb0-ced6-4d70-b842-4a01bdf7b3a8)
+
   
 
 ![image](https://github.com/user-attachments/assets/0a7e8d1e-1bd5-4c94-8c21-d011ba440cb8)
