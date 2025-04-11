@@ -5,7 +5,7 @@ export interface MetricCfg {
     needsTags?: boolean;     
     benchmarkKey: string;    
     calcPath: string;     
-    currentKey: string;   // 👈 NEW
+    currentKey: string;
     historyKey: string; 
     classScoped?: boolean;   
     extraPaths?: {            
