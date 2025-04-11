@@ -4,7 +4,10 @@ export interface MetricCfg {
     label: string;            
     needsTags?: boolean;     
     benchmarkKey: string;    
-    calcPath: string;         
+    calcPath: string;     
+    currentKey: string;   // 👈 NEW
+    historyKey: string; 
+    classScoped?: boolean;   
     extraPaths?: {            
       tags?: string;          
     };
@@ -15,13 +18,19 @@ export interface MetricCfg {
       value: 'LCOM4',
       label: 'LCOM4',
       benchmarkKey: 'lcom4_benchmark',
-      calcPath: 'lcom4'
+      calcPath: 'lcom4',
+      currentKey: 'current_lcom4',
+      historyKey: 'lcom4_history',
+      classScoped: true
     },
     {
       value: 'LCOMHS',
       label: 'LCOMHS',
       benchmarkKey: 'lcomhs_benchmark',
-      calcPath: 'lcomhs'
+      calcPath: 'lcomhs',
+      currentKey: 'current_lcomhs',
+      historyKey: 'lcomhs_history',
+      classScoped: true
     },
     {
       value: 'DefectScore',
@@ -31,25 +40,37 @@ export interface MetricCfg {
       needsTags: true,
       extraPaths: {
         tags: 'defectscore/labelmapping'
-      }
+      },
+      currentKey: 'current_defect_score',
+      historyKey: 'defect_score_history',
+      classScoped: false
     },
     {
       value: 'AfferentCoupling',
       label: 'Afferent Coupling',
       benchmarkKey: 'afferent_coupling_benchmark',
-      calcPath: 'afferentcoupling'
+      calcPath: 'afferentcoupling',
+      currentKey: 'current_afferent',
+      historyKey: 'afferent_history',
+      classScoped: true
     },
     {
       value: 'EfferentCoupling',
       label: 'Efferent Coupling',
       benchmarkKey: 'efferent_coupling_benchmark',
-      calcPath: 'efferentcoupling'
+      calcPath: 'efferentcoupling',
+      currentKey: 'current_efferent',
+      historyKey: 'efferent_history',
+      classScoped: true
     },
     {
       value: 'DefectDensityAnalysis',
       label: 'Defect Density Analysis',
       benchmarkKey: 'defect_density_analysis_benchmark',
-      calcPath: 'defectdensity'
+      calcPath: 'defectdensity',
+      currentKey: 'current_defect_density',
+      historyKey: 'defect_density_history',
+      classScoped: false
     }
   ];
   export const metricCfg = (value: string) =>

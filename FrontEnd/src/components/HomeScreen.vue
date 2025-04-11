@@ -75,7 +75,7 @@
         </div>
 
         <div class="button-container">
-          <button @click="handleBenchmarkSubmit(true)">Apply/Continue</button>
+          <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
         </div>
       </div>
     </div>
@@ -242,7 +242,6 @@ export default {
             )
           )
         );
-        console.log('Defect Score Mapping:', request.data);
       } catch (error) {
         console.error('Error updating defect score mapping:', error);
         return;
@@ -273,7 +272,7 @@ export default {
     //New function to handle the benchmark submission
     const handleBenchmarkSubmit = async () => {
       showBenchmarkDialog.value = false; // close the dialog
-      await postBenchmarks(benchmarkInputs.value);
+      await postBenchmarks(benchmarkInputs);
       showOutput.value = true; //Show the output, with or without benchmarks
     };
 
