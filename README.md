@@ -1,3 +1,4 @@
+
 # SER516_Spring25_Teams_3_and_4_Frontend
 
 ## Software Quality Metrics Calculator
@@ -68,7 +69,7 @@ ___
 
 - UI overhaul of the results page.
 
-- Added genric logic for calculate and benchmarks
+- Added generic logic for calculate and benchmarks
 
 ---
 
@@ -142,7 +143,7 @@ Now, to compute your metrics, you have to follow 4 steps:
 
 ![image](https://github.com/user-attachments/assets/5d24b4d9-c354-490c-b3b1-ae90490cb746)
 
-- There are two ways to validate your input, either by pressing `return` key or by clicking on the **Validate your URL** button below the textbox highlighted above.
+- There are two ways to validate your input, either by pressing `return / enter` key or by clicking on the **Validate your URL** button below the textbox highlighted above.
 
   
 
