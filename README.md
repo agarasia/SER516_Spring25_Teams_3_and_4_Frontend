@@ -92,11 +92,11 @@ To run the project, follow these steps:
 
 - Go to the Terminal and redirect to the root directory of this project.
 
-- Run this Docker command to build the application:
+- Run this Docker command to build the application (This command will pull all the latest backend services and latest frontend from DockerHub, build and run the entire application) :
 
 ```
 
-docker-compose up --build
+docker compose up
 
 ```
 
