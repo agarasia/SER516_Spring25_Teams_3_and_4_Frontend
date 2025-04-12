@@ -377,7 +377,7 @@ This project is a collaborative effort by the SER516_Spring25_Teams_3_and_4_Fron
 
 - Hitesh Kolluru (@hkolluru)
 
-- Smit Panchal (@spach19)
+- Smit Panchal (@spanch19)
 
 - Thrupthi Hosahalli Manjunatha (@thosahal)
 
