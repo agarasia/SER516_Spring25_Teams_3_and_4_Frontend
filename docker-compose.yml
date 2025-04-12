@@ -1,0 +1,145 @@
+version: "3.9"
+# smitmaheshpanchal/middleware
+# smitmaheshpanchal/lcomhs
+# smitmaheshpanchal/lcom4
+# smitmaheshpanchal/instability
+# smitmaheshpanchal/defect-score
+# smitmaheshpanchal/defect-density
+# smitmaheshpanchal/benchmark
+# smitmaheshpanchal/efferent-coupling
+# smitmaheshpanchal/afferent-coupling
+services:
+  # --------------------------
+  # Database
+  # --------------------------
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # --------------------------
+  # API / Back‑end services
+  # --------------------------
+  afferent-api:
+    image: smitmaheshpanchal/afferent-coupling
+    container_name: afferent-api-container
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/afferent_db
+    depends_on:
+      - mongodb
+  
+  efferent-api:
+    image: smitmaheshpanchal/efferent-coupling
+    container_name: efferent-api-container
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/efferent_coupling_db
+    depends_on:
+      - mongodb
+  
+  defectdensity-api:
+    image: smitmaheshpanchal/defect-density
+    container_name: defectdensityapi
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/defectdensitydb
+    depends_on:
+      - mongodb
+
+  lcom4:
+    image: smitmaheshpanchal/lcom4
+    container_name: lcom4_container
+    depends_on:
+      - mongodb
+    ports:
+      - "8001:8000"   # host:container
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+
+  lcomhs:
+    image: smitmaheshpanchal/lcomhs
+    container_name: lcomhs_container
+    depends_on:
+      - mongodb
+    ports:
+      - "8002:8000"   # host:container
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+
+  defectscore:
+    image: smitmaheshpanchal/defect-score
+    container_name: defect_score_container
+    depends_on:
+      - mongodb
+    ports:
+      - "8003:8000"   # host:container
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+
+  benchmark:
+    image: smitmaheshpanchal/benchmark
+    container_name: benchmark_container
+    ports:
+      - "8004:8000"   # host:container
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+
+  instability:
+    image: smitmaheshpanchal/instability
+    container_name: instability_container
+    ports:
+      - "8005:8000"   # host:container
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+
+  gateway:
+    image: smitmaheshpanchal/middleware
+    container_name: gateway_container
+    ports:
+      - "8080:8080"   # API gateway port accessible to the outside
+    environment:
+      - LCOM4_SERVICE_URL=http://lcom4:8000
+      - LCOMHS_SERVICE_URL=http://lcomhs:8000
+      - DEFECT_SCORE_SERVICE_URL=http://defectscore:8000
+      - BENCHMARK_SERVICE_URL=http://benchmark:8000
+      - INSTABILITY_SERVICE_URL=http://instability:8000
+      - AFFERENT_SERVICE_URL=http://afferent-api:8081
+      - EFFERENT_SERVICE_URL=http://efferent-api:8082
+      - DEFECTDENSITY_SERVICE_URL=http://defectdensity-api:8083
+    depends_on:
+      - lcom4
+      - lcomhs
+      - defectscore
+      - benchmark
+      - instability
+      - afferent-api
+      - efferent-api
+      - defectdensity-api
+
+  # --------------------------
+  # Front‑end service
+  # --------------------------
+  frontend:
+    image: patilaniket14/metric-frontend:latest
+    container_name: metric_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - gateway
+    networks:
+      - metric_net
+
+networks:
+  metric_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
