@@ -88,7 +88,7 @@
   <!-- Footer Section -->
   <footer class="footer" v-if="!showOutput">
     <p>&copy; 2024 Metric Calculator. All rights reserved.</p>
-    <p>Developed by: Aniket Patil, Aum Garasia, Satyam Shekhar, Uma Maheswar Reddy Nallamilli</p>
+    <p>Developed by: Aniket Patil, Aum Garasia, Satyam Shekhar, Uma Maheswar Reddy Nallamilli, Hitesh Kolluru, Smit Panchal, Thrupthi Hosahalli Manjunatha, Faisal Alaqal</p>
   </footer>
 </template>
 
