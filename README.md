@@ -236,7 +236,8 @@ For instance, if you label an issue as "bug", you should input the tag **bug** h
 
 -  **Visual Guide:**
 
-![Tags on Github Issues](resources/TagExample.png)
+<img width="1078" alt="Screenshot 2025-04-11 at 5 02 53 PM" src="https://github.com/user-attachments/assets/2b274d61-43a0-45cc-8301-1df4a35cbda9" />
+
 
   
 
@@ -284,9 +285,9 @@ Your custom defect tag would now be displayed below the **+ Add Tag** button.
 
 Once all the metrics you need are selected, just click on **Calculate** button.
 
-### change the below image
 
-![image](https://github.com/user-attachments/assets/8655fb30-dc28-4da8-a304-89391c217b12)
+<img width="1379" alt="Screenshot 2025-04-11 at 4 39 31 PM" src="https://github.com/user-attachments/assets/9b6536f8-fa21-4fec-bf19-37e9435a952a" />
+
 
   
   
@@ -323,7 +324,6 @@ Additionally, you can also do something as a mix of the two, say I want to set a
 
 Once the *Apply/Continue* button is clicked, the results would be shown for the metrics within 2 graphs. One for the LCOM metrics (LCOM4 and LCOMHS), and other for the Defect Score. For current Metric values cards will show the data like below.
 
-## change the image below only
 
 ![WhatsApp Image 2025-04-11 at 4 53 30 PM](https://github.com/user-attachments/assets/f1c3deb0-ced6-4d70-b842-4a01bdf7b3a8)
 
