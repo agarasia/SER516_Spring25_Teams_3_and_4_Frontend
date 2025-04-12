@@ -28,7 +28,7 @@
 
   
 
-Welcome to the documentation for the SER516_Spring25_Teams_3_and_4_Frontend - Software Quality Metrics Calculator. This project is aimed at computing and retaining those computations of Software Quality Metrics *(in this case, LCOM4, LCOMHS,AFFERENT COUPLING, EFFERENT COUPLING, DEFECT DENSITY SCORE and Defect score)* for any GitHub Public Repository that has Java code. This tool can help user to maintain software quality for projects at all scale.
+Welcome to the documentation for the SER516_Spring25_Teams_3_and_4_Frontend - Software Quality Metrics Calculator. This project is aimed at computing and retaining those computations of Software Quality Metrics *(in this case, LCOM4, LCOMHS,AFFERENT COUPLING, EFFERENT COUPLING, DEFECT DENSITY SCORE and DEFECT SCORE)* for any GitHub Public Repository that has Java code. This tool can help user to maintain software quality for projects at all scale.
 
   
 
@@ -355,6 +355,10 @@ Since LCOM4, LCOMHS, AFFERENT, AND EFFERENT COUPLING are computed for each class
 
 
 ![WhatsApp Image 2025-04-11 at 7 59 25 PM-6](https://github.com/user-attachments/assets/f678d2cc-becf-4bb4-8173-b20126ef93f1)
+
+
+![WhatsApp Image 2025-04-11 at 7 59 25 PM-7](https://github.com/user-attachments/assets/4a79bff1-9dd3-4529-bf6a-107c32168c03)
+
 
 
 
