@@ -68,6 +68,8 @@ ___
 
 - UI overhaul of the results page.
 
+- Added genric logic for calculate and benchmarks
+
 ---
 
   
