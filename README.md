@@ -198,14 +198,16 @@ Note that unless and until you see the message `Valid GitHub repository`, the op
 
 Now that you have a valid GitHub URL and it is validated, you would now see that the checkboxes for metrics are clickable.
 
-<img width="1385" alt="Screenshot 2025-04-11 at 4 39 11 PM" src="https://github.com/user-attachments/assets/76c168b6-b36b-40e8-a09c-4c9192d3f88a" />
+<img width="1383" alt="Screenshot 2025-04-11 at 7 45 20 PM" src="https://github.com/user-attachments/assets/eaaa23d3-f286-49f1-802b-a93ffc194123" />
+
 
 
   
 
 You can click on one or more metrics (say for instance, you want to calculate LCOM4 and Defect Score) simply by clicking on the corresponding checkboxes.
 
-<img width="1379" alt="Screenshot 2025-04-11 at 4 39 31 PM" src="https://github.com/user-attachments/assets/061f8554-6f2c-4126-b39b-da4b71d4b4a4" />
+<img width="1193" alt="Screenshot 2025-04-11 at 7 46 26 PM" src="https://github.com/user-attachments/assets/475f4288-8f47-42ae-8b3d-0c3f9ea6c566" />
+
 
 
   
@@ -288,7 +290,8 @@ Your custom defect tag would now be displayed below the **+ Add Tag** button.
 Once all the metrics you need are selected, just click on **Calculate** button.
 
 
-<img width="1379" alt="Screenshot 2025-04-11 at 4 39 31 PM" src="https://github.com/user-attachments/assets/9b6536f8-fa21-4fec-bf19-37e9435a952a" />
+<img width="1193" alt="Screenshot 2025-04-11 at 7 46 26 PM" src="https://github.com/user-attachments/assets/61679ef6-3b44-49f7-93dc-d1cf129ef297" />
+
 
 
   
@@ -324,24 +327,36 @@ Additionally, you can also do something as a mix of the two, say I want to set a
 
   
 
-Once the *Apply/Continue* button is clicked, the results would be shown for the metrics within 2 graphs. One for the LCOM metrics (LCOM4 and LCOMHS), and other for the Defect Score. For current Metric values cards will show the data like below.
+Once the *Apply/Continue* button is clicked, the results would be shown for the metrics. For current Metric values cards will show the data like below.
 
 
-![WhatsApp Image 2025-04-11 at 4 53 30 PM](https://github.com/user-attachments/assets/f1c3deb0-ced6-4d70-b842-4a01bdf7b3a8)
+![WhatsApp Image 2025-04-11 at 7 59 25 PM](https://github.com/user-attachments/assets/d4f76377-5369-4b88-b705-bebe922d64ff)
+
+
+![WhatsApp Image 2025-04-11 at 7 59 25 PM-2](https://github.com/user-attachments/assets/ddc0a692-e9a7-4c6c-bd5c-c5f74115d3bb)
+  
+
+![WhatsApp Image 2025-04-11 at 7 59 25 PM](https://github.com/user-attachments/assets/c904f9a5-bf4e-4afd-8cb0-b0c3a80ed7e1)
+
+
+![WhatsApp Image 2025-04-11 at 7 59 25 PM-3](https://github.com/user-attachments/assets/2a161c5a-01df-4607-b3b7-a58314151ff9)
+
+
+![WhatsApp Image 2025-04-11 at 7 59 25 PM-4](https://github.com/user-attachments/assets/b8be28de-19a3-4ddc-952c-bd4db3546af5)
+
+
+
+
+Since LCOM4, LCOMHS, AFFERENT, AND EFFERENT COUPLING are computed for each class, there is an option to select which class you want to observe using the dropdown.
 
   
 
-![image](https://github.com/user-attachments/assets/0a7e8d1e-1bd5-4c94-8c21-d011ba440cb8)
+![WhatsApp Image 2025-04-11 at 7 59 25 PM-5](https://github.com/user-attachments/assets/b61c5ed6-927b-49cf-a7ee-d5f876bcc0b1)
 
-  
 
-![image](https://github.com/user-attachments/assets/4ed35575-8580-4800-af13-cf9b6d6dc6b9)
+![WhatsApp Image 2025-04-11 at 7 59 25 PM-6](https://github.com/user-attachments/assets/f678d2cc-becf-4bb4-8173-b20126ef93f1)
 
-Since LCOM4 and LCOMHS are computed for each class, there is an option to select which class do you want to observe using the dropdown.
 
-  
-
-![image](https://github.com/user-attachments/assets/c580ed1b-48ae-4b3b-933e-32c24ec82442)
 
 For defect score, a number of values are illustrated; which are:
 
