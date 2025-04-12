@@ -25,8 +25,13 @@
           <label>Select Metrics to Calculate:</label>
           <div class="checkbox-group">
             <div class="checkbox-item" v-for="metric in availableMetrics" :key="metric.value">
-              <input type="checkbox" :id="metric.value" :value="metric.value" v-model="selectedMetrics"
-                :disabled="!isValidRepo" />
+              <input
+                type="checkbox"
+                :id="metric.value"
+                :value="metric.value"
+                v-model="selectedMetrics"
+                :disabled="!isValidRepo || !metric.isEnabled?.()"
+              />
               <label :for="metric.value">{{ metric.label }}</label>
             </div>
           </div>
@@ -93,7 +98,7 @@
 </template>
 
 <script lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
 import axios from 'axios';
 import TagInput from './TagInput.vue';
 import OutputView from './OutputView.vue';
@@ -121,7 +126,19 @@ export default {
 
 
     const loadingText = ref('Loading...');
-    const availableMetrics = METRICS;
+    const availableMetrics = computed(() =>
+      METRICS.map(metric => {
+        return {
+          ...metric,
+          isEnabled: () => {
+            if (!metric.dependsOn) return true; // If no dependencies, always enabled
+            return metric.dependsOn.every(dependency =>
+              selectedMetrics.value.includes(dependency)
+            ); // Check if all dependencies are selected
+          }
+        };
+      })
+    );
 
     const isValidGitHubUrl = (url) => {
       const regex = /^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/;

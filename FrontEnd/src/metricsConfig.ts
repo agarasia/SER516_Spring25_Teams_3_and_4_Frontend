@@ -11,6 +11,7 @@ export interface MetricCfg {
     extraPaths?: {            
       tags?: string;          
     };
+    dependsOn?: string[];
   }
   
   export const METRICS: MetricCfg[] = [
@@ -71,6 +72,16 @@ export interface MetricCfg {
       currentKey: 'current_defect_density',
       historyKey: 'defect_density_history',
       classScoped: false
+    },
+    {
+      value: 'Instability',
+      label: 'Instability',
+      benchmarkKey: 'instability_benchmark',
+      calcPath: 'instability',
+      currentKey: 'current_instability',
+      historyKey: 'instability_history',
+      classScoped: true,
+      dependsOn: ['AfferentCoupling', 'EfferentCoupling']
     }
   ];
   export const metricCfg = (value: string) =>
