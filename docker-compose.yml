@@ -25,6 +25,7 @@ services:
   # --------------------------
   afferent-api:
     image: smitmaheshpanchal/afferent-coupling
+    platform: linux/amd64
     container_name: afferent-api-container
     ports:
       - "8081:8081"
@@ -35,6 +36,7 @@ services:
   
   efferent-api:
     image: smitmaheshpanchal/efferent-coupling
+    platform: linux/amd64
     container_name: efferent-api-container
     ports:
       - "8082:8082"
@@ -45,6 +47,7 @@ services:
   
   defectdensity-api:
     image: smitmaheshpanchal/defect-density
+    platform: linux/amd64
     container_name: defectdensityapi
     ports:
       - "8083:8083"
@@ -55,6 +58,7 @@ services:
 
   lcom4:
     image: smitmaheshpanchal/lcom4
+    platform: linux/amd64
     container_name: lcom4_container
     depends_on:
       - mongodb
@@ -75,6 +79,7 @@ services:
 
   defectscore:
     image: smitmaheshpanchal/defect-score
+    platform: linux/amd64
     container_name: defect_score_container
     depends_on:
       - mongodb
@@ -85,6 +90,7 @@ services:
 
   benchmark:
     image: smitmaheshpanchal/benchmark
+    platform: linux/amd64
     container_name: benchmark_container
     ports:
       - "8004:8000"   # host:container
