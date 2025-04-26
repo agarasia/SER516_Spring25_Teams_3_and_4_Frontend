@@ -109,7 +109,7 @@ export interface MetricCfg {
       currentKey: 'current_dot',
       historyKey: 'dot_history',
       classScoped: true
-    },
+    }
   ];
   export const metricCfg = (value: string) =>
     METRICS.find(m => m.value === value)!; 
