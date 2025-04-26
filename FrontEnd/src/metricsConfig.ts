@@ -82,7 +82,34 @@ export interface MetricCfg {
       historyKey: 'instability_history',
       classScoped: true,
       dependsOn: ['AfferentCoupling', 'EfferentCoupling']
-    }
+    },
+    {
+      value: 'Halstead',
+      label: 'Halstead',
+      benchmarkKey: 'halstead_benchmark',
+      calcPath: 'halstead',
+      currentKey: 'current_halstead',
+      historyKey: 'lcomhs_halstead',
+      classScoped: true
+    },
+    {
+      value: 'Cyclomatic Complexity',
+      label: 'Cyclomatic Complexity',
+      benchmarkKey: 'cyclomatic_benchmark',
+      calcPath: 'cyclo',
+      currentKey: 'current_cyclo',
+      historyKey: 'cyclo_history',
+      classScoped: true
+    },
+    {
+      value: 'Defects Over Time',
+      label: 'Defects Over Time',
+      benchmarkKey: 'dot_benchmark',
+      calcPath: 'dot',
+      currentKey: 'current_dot',
+      historyKey: 'dot_history',
+      classScoped: true
+    },
   ];
   export const metricCfg = (value: string) =>
     METRICS.find(m => m.value === value)!; 
