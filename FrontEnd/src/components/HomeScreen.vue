@@ -1,12 +1,12 @@
 <template>
-  <div class="home-screen">
+  <header v-if="!showOutput">
+    <h1>Software Quality Metric Calculator</h1>
+  </header>
+  <main>
     <!-- Show Input Form if OutputView or BenchmarkDialog is Hidden -->
     <div v-if="!showOutput && !showBenchmarkDialog">
-      <h1>Software Quality Metric Calculator</h1>
-
       <div class="input-container1">
         <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If we do not have any data for the entered repository URL, then it may take some time to compute and assess historical data.</p>
-        
         <label for="github-url">Enter GitHub Repository URL:</label>
         <input
           type="text"
@@ -21,50 +21,74 @@
         </p>
       </div>
 
-      <button @click="submitData" :disabled="!isValidRepo">
+      <br />
+      <br />
+      <!-- <div class="container-wrapper">
+        <div class="input-container2" v-if="isValidRepo">
+          <label>All metrics will be calculated automatically.</label>
+        </div>
+      </div>
+      <br />
+      <br /> -->
+      <button
+        @click="submitData"
+        :disabled="!isValidRepo"
+      >
         {{ buttonText }}
       </button>
-
       <h4 class="loading-text" v-if="isLoading">
         Please Wait, your metrics are being computed.<br />
         The larger the repo, the longer the time.
       </h4>
     </div>
 
-    <!-- Benchmark Dialog -->
+    <!-- Benchmark Input Dialog -->
     <div v-if="showBenchmarkDialog" class="dialog-overlay">
       <div class="dialog">
-        <h4>For each metric, you can optionally enter a benchmark score in the input box and choose whether to display it
-          on the chart by checking or unchecking the checkbox for that metric.</h4>
+        <h4>
+          For each metric, you can optionally enter a benchmark score in the input box and choose whether to display it
+          on the chart by checking or unchecking the checkbox for that metric.
+        </h4>
+        <br />
         <div class="benchmark-container">
           <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
-            <div class="label-input-container">
-              <label :for="`benchmark-${metric.value}`">{{ metric.label }} Benchmark:</label>
-              <input
-                type="number"
-                :id="`benchmark-${metric.value}`"
-                v-model.number="benchmarkInputs[metric.benchmarkKey]"
-                :placeholder="`Enter ${metric.label} benchmark`"
-              />
+              <div class="label-input-container">
+                <label :for="`benchmark-${metric.value}`">
+                  {{ metric.label }} Benchmark:
+                </label>
+                <input
+                  type="number"
+                  :id="`benchmark-${metric.value}`"
+                  v-model.number="benchmarkInputs[metric.benchmarkKey]"
+                  :placeholder="`Enter ${metric.label} benchmark`"
+                />
+              </div>
             </div>
           </div>
         </div>
+
         <div class="button-container">
           <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
         </div>
       </div>
-    </div>
 
-    <!-- Output View -->
+    <!-- Show Output Screen After Validation -->
     <OutputView
-      v-if="showOutput"
       :computedData="computedData"
       :benchmarks="benchmarks"
       :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput"
       @goBack="showFormAgain"
       @updateBenchmarks="postBenchmarks"
     />
-  </div>
+  </main>
+  <!-- Footer Section -->
+  <footer class="footer" v-if="!showOutput">
+    <p>&copy; 2025 Metric Calculator. All rights reserved.</p>
+    <p>
+      Developed by: SER516 Class (Spring 2025)
+    </p>
+  </footer>
 </template>
 
 <script lang="ts">
@@ -165,6 +189,25 @@ export default {
           return;
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
+        // Finally, add repo to shared volume.
+        const req = githubUrl.value.toLowerCase();
+        const res = await axios.post(
+          'http://localhost:8080/add_repo',
+          { repo_url: req },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              mode: 'cors',
+            },
+          }
+        );
+        console.log('Response from backend:', res.data);
+        if (res.status === 200) {
+          console.log('Repository added successfully.');
+        } else {
+          console.error('Failed to add repository.');
+        }
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
@@ -188,21 +231,10 @@ export default {
 
     const calculateMetrics = async () => {
       try {
-        const { data } = await axios.post(
-          'http://localhost:8080/metrics',
-          {
-            repo_url: githubUrl.value,
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              mode: 'cors',
-            },
-          }
-        );
-        computedData.value = data;
-        console.log('Computed Data:', computedData.value);
+        const metrics = "cc,cyclo,hal";
+        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
+        const response = await axios.get(req);
+        console.log('Response from backend:', response.data);
         return true;
       } catch (error) {
         console.error('Error sending data to backend:', error);
@@ -212,7 +244,7 @@ export default {
 
     const handleBenchmarkSubmit = async () => {
       showBenchmarkDialog.value = false; // close the dialog
-      await postBenchmarks(benchmarkInputs);
+      // await postBenchmarks(benchmarkInputs);
       showOutput.value = true; // Show the output, with or without benchmarks
     };
 
@@ -281,9 +313,43 @@ export default {
 </script>
 
 <style scoped>
+header {
+  background: linear-gradient(to right, #09203f, #537895);
+  padding: px;
+  text-align: center;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 0;
+  width: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+footer {
+  flex-shrink: 0;
+  background: linear-gradient(to right, #09203f, #537895);
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+@media (min-height: 700px) {
+  footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
 
 .input-container1 {
-  margin: 10px auto;
+  margin: 100px auto;
   margin-bottom: 5px;
   width: 80%;
   max-width: 500px;
