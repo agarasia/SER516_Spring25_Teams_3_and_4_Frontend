@@ -109,7 +109,45 @@ export interface MetricCfg {
       currentKey: 'current_dot',
       historyKey: 'dot_history',
       classScoped: true
+    },
+    {
+      value: 'Code coverage',
+      label: 'Code coverage',
+      benchmarkKey: 'cc_benchmark',
+      calcPath: 'cc',
+      currentKey: 'current_cct',
+      historyKey: 'cc_history',
+      classScoped: true
+    },
+    {
+      value: 'Fog index',
+      label: 'Fog index',
+      benchmarkKey: 'fog_benchmark',
+      calcPath: 'fog',
+      currentKey: 'current_fog',
+      historyKey: 'fog_history',
+      classScoped: true
+    },
+    {
+      value: 'Code churn',
+      label: 'Code churn',
+      benchmarkKey: 'codechurn_benchmark',
+      calcPath: 'codechurn',
+      currentKey: 'current_codechurn',
+      historyKey: 'codechurn_history',
+      classScoped: true
+    },
+    {
+      value: 'FIFO',
+      label: 'FIFO',
+      benchmarkKey: 'fifo_benchmark',
+      calcPath: 'fifo',
+      currentKey: 'current_fifo',
+      historyKey: 'codechurn_fifo',
+      classScoped: true
     }
+
+
   ];
   export const metricCfg = (value: string) =>
     METRICS.find(m => m.value === value)!; 
