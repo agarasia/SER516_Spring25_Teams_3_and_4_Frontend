@@ -1,73 +1,103 @@
 <template>
   <div class="metrics-guide-container">
-    <div class="metrics-guide-box">
+    <!-- Metrics Content -->
+    <div class="metrics-guide-box-1">
       <p class="metrics-guide-heading">Metrics Guide</p>
-      <hr style="width: 3.8%; margin-left: 1.8px; height: 2px; background-color: #4A6C8B;">
-      <p id="metrics-guide-overview" style="font-weight: 500;">
-        The Metrics Guide offers a thorough description of the many software quality metrics that are used to assess and enhance your codebase's readability, maintainability, and general quality. These metrics assist teams and developers in spotting any problems, improving performance, and making sure the code complies with best practices. You can attain greater software quality and dependability by prioritizing development efforts, testing, and refactoring using knowledge of these metrics.<br><br>
-        The following page elucidates the various metrics and their significance in the context of software development.
-      </p>
+      <hr style="width: 3.8%; margin-left: 1.45em; height: 2px; background-color: #4A6C8B;">
+      <table style="width: 100%; margin-top: 0em; margin-left:-1em">
+        <td style="width: 20%; padding-right: 2em; padding-left: 2em;">
+          <!-- Sidebar -->
+          <div class="sidebar">
+            <ul>
+              <li v-for="(category, key) in categories" :key="key" :class="{ active: selectedCategory === key }"
+                @click="filterByCategory(key)">
+                <span :style="{ backgroundColor: category.color }" class="category-dot"></span>
+                {{ key }}
+              </li>
+              <li :class="{ active: selectedCategory === 'All' }" @click="filterByCategory('All')">
+                <span class="category-dot" style="background-color: #ccc;"></span>
+                All Metrics
+              </li>
+            </ul>
+          </div>
+        </td>
+        <td style="padding-left: 2em;">
+          <p id="metrics-guide-overview" style="font-weight: 500;">
+            The Metrics Guide offers a thorough description of the many software quality metrics that are used to assess
+            and
+            enhance your codebase's readability, maintainability, and general quality. These metrics assist teams and
+            developers in spotting any problems, improving performance, and making sure the code complies with best
+            practices. You can attain greater software quality and dependability by prioritizing development efforts,
+            testing, and refactoring using knowledge of these metrics.<br><br>
+            The following page elucidates the various metrics and their significance in the context of software
+            development.
+          </p>
 
-      <div class="metrics-guide-box" style="margin-left: -2.7%; border: 0; box-shadow: none;">
-      <div v-for="metric in metrics" :key="metric.id" class="metric">
-        <div class="metric-category">
-            <span style="display: inline-flex; align-items: center;">
-            <span :style="{ width: '10px', height: '10px', backgroundColor: metric.categoryColor, borderRadius: '50%', marginRight: '0.4em' }"></span>
-            {{ metric.category }}
-            </span>
-        </div>
-        <div class="metric-heading-container">
-          <img :src="metric.icon" alt="Icon" style="width: 22px; height: 22px; margin-top:1.25em; padding-right:0.5em">
-          <h1 class="metric-heading">{{ metric.name }}</h1>
-        </div>
-        <p>{{ metric.description }}</p>
-        <hr style="width: 96.8%; margin-left: 0em; height: 0.1px; border: 0px; background-color: #ccc;">
-        <div class="metric-overview" style="width: 95%;">
-          <h2>Overview</h2>
-            <p style="font-weight: 500;">{{ metric.overview }}</p>
-          <h2>How to use this metric</h2>
-            <p style="font-weight: 500;">{{ metric.usage.join(', ') }}</p>
-            <div class="important-considerations">
-              <div class="important-header">
-                <img src="https://img.icons8.com/ios-filled/50/ffa500/error--v1.png" alt="Important Icon" class="important-icon" />
-                <span>Important Considerations</span>
+          <div class="metrics-guide-box" style="margin-left: -2.7%; border: 0; box-shadow: none;">
+            <div v-for="metric in filteredMetrics" :key="metric.id" class="metric">
+              <div class="metric-category">
+                <span style="display: inline-flex; align-items: center;">
+                  <span
+                    :style="{ width: '10px', height: '10px', backgroundColor: metric.categoryColor, borderRadius: '50%', marginRight: '0.4em' }"></span>
+                  {{ metric.category }}
+                </span>
               </div>
-              <p>{{ metric.considerations }}</p>
-            </div>
-            <div style="display: flex;gap: 20px; margin-top: 1em;">
-              <div class="when-to-use">
-              <h2>When to use</h2>
-                <ul style="font-weight: 500;">
-                  <li v-for="usage in metric.whenToUse" :key="usage">{{ usage }}</li>
-                </ul>
+              <div class="metric-heading-container">
+                <img :src="metric.icon" alt="Icon"
+                  style="width: 22px; height: 22px; margin-top:1.25em; padding-right:0.5em">
+                <h1 class="metric-heading">{{ metric.name }}</h1>
               </div>
-              <div class="when-to-use">
-                <h2>When not to use</h2>
-                  <ul style="font-weight: 500;">
-                    <li v-for="usage in metric.whenNotToUse" :key="usage">{{ usage }}</li>
-                  </ul>
+              <p>{{ metric.description }}</p>
+              <hr style="width: 96.8%; margin-left: 0em; height: 0.1px; border: 0px; background-color: #ccc;">
+              <div class="metric-overview" style="width: 95%;">
+                <h2>Overview</h2>
+                <p style="font-weight: 500;">{{ metric.overview }}</p>
+                <h2>How to use this metric</h2>
+                <p style="font-weight: 500;">{{ metric.usage.join(', ') }}</p>
+                <div class="important-considerations">
+                  <div class="important-header">
+                    <img src="https://img.icons8.com/ios-filled/50/ffa500/error--v1.png" alt="Important Icon"
+                      class="important-icon" />
+                    <span>Important Considerations</span>
+                  </div>
+                  <p>{{ metric.considerations }}</p>
                 </div>
-            </div>
-            <div class="metric-interpretation">
-              <h2>Interpretation</h2>
-              <p style="font-weight: 500;">{{ metric.interpretation }}</p>
-            </div>
-            <h2>Related Metrics</h2>
-            <div class="related-metrics">
-              <div v-for="related in metric.relatedMetrics" :key="related.name" class="related-metric">
-                <span class="related-metric-dot" :style="{ backgroundColor: related.color }"></span>
-                <span><strong>{{ related.name }}</strong></span>
-                <p>{{ related.description }}</p>
+                <div style="display: flex;gap: 20px; margin-top: 1em;">
+                  <div class="when-to-use">
+                    <h2>When to use</h2>
+                    <ul style="font-weight: 500;">
+                      <li v-for="usage in metric.whenToUse" :key="usage">{{ usage }}</li>
+                    </ul>
+                  </div>
+                  <div class="when-to-use">
+                    <h2>When not to use</h2>
+                    <ul style="font-weight: 500;">
+                      <li v-for="usage in metric.whenNotToUse" :key="usage">{{ usage }}</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="metric-interpretation">
+                  <h2>Interpretation</h2>
+                  <p style="font-weight: 500;">{{ metric.interpretation }}</p>
+                </div>
+                <h2>Related Metrics</h2>
+                <div class="related-metrics">
+                  <div v-for="related in metric.relatedMetrics" :key="related.name" class="related-metric">
+                    <span class="related-metric-dot" :style="{ backgroundColor: related.color }"></span>
+                    <span><strong>{{ related.name }}</strong></span>
+                    <p>{{ related.description }}</p>
+                  </div>
+                </div>
+                <br>
+                <hr style="width: 96.8%; margin-left: 0em; height: 0.1px; border: 0px; background-color: #ccc;">
+                <br>
               </div>
             </div>
-        <br>
-            <hr style="width: 96.8%; margin-left: 0em; height: 0.1px; border: 0px; background-color: #ccc;">
-            <br>
-      </div>
-      </div>
-      </div>
+          </div>
+        </td>
+      </table>
     </div>
-    </div>
+  </div>
 </template>
 
 <script>
@@ -75,6 +105,16 @@ export default {
   name: 'MetricsGuide',
   data() {
     return {
+      selectedCategory: 'All',
+      categories: {
+        Complexity: { color: 'violet' },
+        Dependency: { color: 'Aqua' },
+        Documentation: { color: 'green' },
+        Coupling: { color: 'orange' },
+        Cohesion: { color: 'purple' },
+        Size: { color: 'blue' },
+        Defect: { color: 'red' }
+      },
       metrics: [
         {
           id: 'mccabe',
@@ -536,10 +576,22 @@ export default {
         }
       ]
     };
+  },
+  computed: {
+    filteredMetrics() {
+      if (this.selectedCategory === 'All') {
+        return this.metrics;
+      }
+      return this.metrics.filter(metric => metric.category === this.selectedCategory);
+    }
+  },
+  methods: {
+    filterByCategory(category) {
+      this.selectedCategory = category;
+    }
   }
 };
 </script>
-
 
 <style scoped>
 .related-metrics {
@@ -555,7 +607,8 @@ export default {
   border-radius: 8px;
   padding: 15px;
   flex: 1;
-  min-width: 250px; /* Ensure a minimum width for smaller screens */
+  min-width: 250px;
+  /* Ensure a minimum width for smaller screens */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -599,50 +652,83 @@ export default {
 .metrics-guide-container {
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Align content to the top */
-  background-color: #f5f5f5; /* Optional: Add a light background color */
+  align-items: flex-start;
+  /* Align content to the top */
+  background-color: #f5f5f5;
+  /* Optional: Add a light background color */
   /* padding-top: 5em; Ensure consistent space at the top */
-  padding-bottom: 5em; /* Ensure consistent space at the bottom */
-  min-height: 100vh; /* Ensure the container takes at least the full viewport height */
-  box-sizing: border-box; /* Include padding in the height calculation */
+  padding-bottom: 5em;
+  /* Ensure consistent space at the bottom */
+  min-height: 100vh;
+  /* Ensure the container takes at least the full viewport height */
+  box-sizing: border-box;
+  /* Include padding in the height calculation */
 }
 
 .metric-heading-container {
   display: flex;
-  margin-bottom: 1em; /* Space below the heading */
+  margin-bottom: 1em;
+  /* Space below the heading */
 }
 
 #metrics-guide-overview {
   font-size: 1.2em;
-  color: #555; /* Optional: Change text color */
-  margin-top: 2.5em; /* Space above the paragraph */
-  margin-bottom: 4em; /* Space below the paragraph */
-  margin-right: 2em; /* Space to the right */
+  color: #555;
+  /* Optional: Change text color */
+  margin-top: 2.5em;
+  /* Space above the paragraph */
+  margin-bottom: 4em;
+  /* Space below the paragraph */
+  margin-right: 2em;
+  /* Space to the right */
 }
 
 .metrics-guide-heading {
   font-size: 2.5em;
   font-weight: bold;
-  color: #333; /* Optional: Change text color */
-  margin-bottom: -0.4em; /* Space below the heading */
+  color: #333;
+  /* Optional: Change text color */
+  margin-bottom: -0.4em;
+  margin-left: 0.5em;
+  /* Space below the heading */
 }
-.metrics-guide-box {
-  width: 60vw;
-  max-width: 1200px; /* Optional: Limit the maximum width */
+
+.metrics-guide-box-1 {
+  width: 85vw;
+  /* Optional: Limit the maximum width */
   border-radius: 10px;
   border: 1px solid #ccc;
   text-align: left;
   margin: 3em;
   padding-left: 1.5em;
-  background-color: #fff; /* Optional: Add a white background for contrast */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
+  background-color: #fff;
+  /* Optional: Add a white background for contrast */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Optional: Add a subtle shadow */
+}
+
+.metrics-guide-box {
+  width: auto;
+  max-width: 1200px;
+  /* Optional: Limit the maximum width */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+  margin: 3em;
+  padding-left: 1.5em;
+  background-color: #fff;
+  /* Optional: Add a white background for contrast */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Optional: Add a subtle shadow */
 }
 
 .metric-heading {
   font-size: 1.5em;
   font-weight: bold;
-  color: #333; /* Optional: Change text color */
-  margin-bottom: -0.4em; /* Space below the heading */
+  color: #333;
+  /* Optional: Change text color */
+  margin-bottom: -0.4em;
+  /* Space below the heading */
 }
 
 .important-considerations {
@@ -668,5 +754,41 @@ export default {
   width: 20px;
   height: 20px;
   margin-right: 10px;
+}
+
+.sidebar {
+  width: 100%;
+  margin-top: 3em;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.sidebar li:hover {
+  background-color: #f5f5f5;
+}
+
+.sidebar li.active {
+  background-color: #4A6C8B;
+  color: #fff;
+}
+
+.category-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
 }
 </style>
