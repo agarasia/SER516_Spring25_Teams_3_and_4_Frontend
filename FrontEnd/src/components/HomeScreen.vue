@@ -238,6 +238,9 @@ export default {
                       data: {
                           difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
                           effort: metrics['Total Efforts'] ?? metrics.Effort,
+                          //volume: metrics['Total Program Volume'] ?? metrics['Program Volume'],
+                          //vocabulary: metrics['Total Program Vocabulary'] ?? metrics['Program Vocabulary'],
+                          //length: metrics['Total Program Length'] ?? metrics['Program Length']
                       }
                   };
               }
