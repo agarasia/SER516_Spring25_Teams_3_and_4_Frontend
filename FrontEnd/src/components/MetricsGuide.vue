@@ -9,14 +9,14 @@
           <!-- Sidebar -->
           <div class="sidebar">
             <ul>
+              <li :class="{ active: selectedCategory === 'All' }" @click="filterByCategory('All')">
+                <span class="category-dot" style="background-color: #ccc;"></span>
+                All Metrics
+              </li>
               <li v-for="(category, key) in categories" :key="key" :class="{ active: selectedCategory === key }"
                 @click="filterByCategory(key)">
                 <span :style="{ backgroundColor: category.color }" class="category-dot"></span>
                 {{ key }}
-              </li>
-              <li :class="{ active: selectedCategory === 'All' }" @click="filterByCategory('All')">
-                <span class="category-dot" style="background-color: #ccc;"></span>
-                All Metrics
               </li>
             </ul>
           </div>

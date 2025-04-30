@@ -225,8 +225,8 @@ export default {
             transformed.ICI = {
               timestamp: ici.timestamp ?? Date.now(),
               data: {
-                ici_score: ici.data.ici_score,
-                repo_size_mb: ici.data.repo_size_mb
+                iCI_score: ici.data.ici_score,
+                repo_size_in_mB: ici.data.repo_size_mb
               }
             };
           }
@@ -313,7 +313,7 @@ export default {
             transformed.Cyclo = {
               timestamp: cyclo.timestamp ?? Date.now(),
               data: {
-                total_cyclomatic: metrics['total cyclomatic complexity']
+                total_cyclomatic_complexity: metrics['total cyclomatic complexity']
                 //max_cyclomatic: metrics['max cyclomatic complexity'],
                 //functions_evaluated: metrics['functions evaluated']
                 //average_cyclomatic: metrics['average cyclomatic complexity'],

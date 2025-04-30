@@ -30,14 +30,16 @@
         </td>
         <td style="padding-left: 2em;">
           <p id="metrics-guide-overview" style="font-weight: 500;">
-            The Metrics Guide offers a thorough description of the many software quality metrics that are used to assess
-            and
-            enhance your codebase's readability, maintainability, and general quality. These metrics assist teams and
-            developers in spotting any problems, improving performance, and making sure the code complies with best
-            practices. You can attain greater software quality and dependability by prioritizing development efforts,
-            testing, and refactoring using knowledge of these metrics.<br><br>
-            The following page elucidates the various metrics and their significance in the context of software
-            development.
+            The Metrics Dashboard provides an interactive visualization of key software quality metrics over time. Use
+            the date range selector above to filter data and focus on specific time periods.<br><br>Toggle metrics from
+            the
+            sidebar to customize your view-select individual metrics or use "Select All" to display everything at once.
+            Each chart shows the trend of different quality indicators, helping you identify patterns, track
+            improvements, and pinpoint areas that need attention.
+            <br><br>This data-driven approach enables teams to make
+            informed decisions about code quality, prioritize refactoring efforts, and measure the impact of development
+            practices over time.
+
           </p>
 
           <div class="metrics-guide-box" style="margin-left: -2.7%; border: 0; box-shadow: none;">
@@ -141,22 +143,29 @@ export default {
       return timestamps;
     });
 
+    function formatLabel(label) {
+      return label
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+
     function getGraphLabels() {
       const labels = {};
-
       for (const m of availableMetrics.value) {
         if (m.dataDict) {
           const metricData = props.computedData[m.value];
           if (metricData && metricData.data && typeof metricData.data === 'object') {
-            labels[m.value] = Object.keys(metricData.data);
+            // Format each key: replace _ with space and capitalize words
+            labels[m.value] = Object.keys(metricData.data).map(formatLabel);
           } else {
             labels[m.value] = [];
           }
         } else {
-          labels[m.value] = [m.label]; // make it consistent (return an array)
+          // For non-dictionary metrics, format the metric label as well
+          labels[m.value] = [formatLabel(m.label)];
         }
       }
-
       return labels;
     }
 
@@ -198,13 +207,13 @@ export default {
 
       // Predefined list of colors
       const colors = [
-        { borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.2)' }, // Teal
-        { borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 0.2)' }, // Red
-        { borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 0.2)' }, // Blue
-        { borderColor: 'rgba(255, 206, 86, 1)', backgroundColor: 'rgba(255, 206, 86, 0.2)' }, // Yellow
-        { borderColor: 'rgba(153, 102, 255, 1)', backgroundColor: 'rgba(153, 102, 255, 0.2)' }, // Purple
-        { borderColor: 'rgba(255, 159, 64, 1)', backgroundColor: 'rgba(255, 159, 64, 0.2)' }, // Orange
-        { borderColor: 'rgba(0, 128, 0, 1)', backgroundColor: 'rgba(0, 128, 0, 0.2)' } // Green
+        { borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 1)' }, // Teal
+        { borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 1)' }, // Red
+        { borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 1)' }, // Blue
+        { borderColor: 'rgba(255, 206, 86, 1)', backgroundColor: 'rgba(255, 206, 86, 1)' }, // Yellow
+        { borderColor: 'rgba(153, 102, 255, 1)', backgroundColor: 'rgba(153, 102, 255, 1)' }, // Purple
+        { borderColor: 'rgba(255, 159, 64, 1)', backgroundColor: 'rgba(255, 159, 64, 1)' }, // Orange
+        { borderColor: 'rgba(0, 128, 0, 1)', backgroundColor: 'rgba(0, 128, 0, 1)' } // Green
       ];
 
       for (let i = 0; i < labels.length; i++) {
