@@ -119,7 +119,7 @@ export default {
         currentKey: 'current_instability',
         historyKey: 'instability_history',
         classScoped: true
-      }
+        }, 
     ];
 
     const selectedMetric = ref(METRICS[0].value);

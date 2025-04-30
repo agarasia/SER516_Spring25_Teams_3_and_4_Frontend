@@ -17,13 +17,14 @@
               <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
                   {{ errorMessages.githubUrl }}
               </p>
+              <div class="metric-selection">
+                  <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+                  <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" /> Cyclomatic Complexity</label>
+                  <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead</label>
+              </div>
           </div>
 
-          <div class="metric-selection">
-              <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
-              <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead</label>
-              <label><input type="checkbox" value="defects" v-model="selectedMetrics" @change="handleMetricChange" /> Defects</label>
-          </div>
+
 
           <br />
           <br />
@@ -54,25 +55,32 @@
         </h4>
         <br />
         <div class="benchmark-container">
-          <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
-              <div class="label-input-container">
-                <label :for="`benchmark-${metric.value}`">
-                  {{ metric.label }} Benchmark:
-                </label>
-                <input
-                  type="number"
-                  :id="`benchmark-${metric.value}`"
-                  v-model.number="benchmarkInputs[metric.benchmarkKey]"
-                  :placeholder="`Enter ${metric.label} benchmark`"
-                />
-              </div>
-            </div>
-          </div>
+            <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
+        <div class="label-input-container">
+          <label :for="`benchmark-${metric.value}`">
+            {{ metric.label }} Benchmark:
+          </label>
+          <input
+            type="number"
+            :id="`benchmark-${metric.value}`"
+            v-model.number="benchmarkInputs[metric.benchmarkKey]"
+            :placeholder="`Enter ${metric.label} benchmark`"
+          />
+        </div>
+      </div>
+        </div>
         </div>
 
-        <div class="button-container">
-          <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
-        </div>
+    <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
+    </div>  <OutputView
+      :computedData="computedData"
+      :benchmarks="benchmarks"
+      :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput"
+      @goBack="showFormAgain"
+      @updateBenchmarks="postBenchmarks"
+    />
       </div>
 
     <!-- Show Output Screen After Validation -->
@@ -105,6 +113,7 @@ export default {
   components: { TagInput, OutputView },
   setup() {
     const githubUrl = ref('');
+    const selectedMetrics = ref([]);
     const errorMessages = reactive({ githubUrl: '' });
     const showOutput = ref(false);
     const isValidRepo = ref(false);
@@ -195,18 +204,25 @@ export default {
       }
     };
 
-    const calculateMetrics = async () => {
+      const calculateMetrics = async () => {
+
       try {
-        const metrics = "cc,cyclo,hal";
+        const metrics = selectedMetrics.value;
         const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
         const response = await axios.get(req);
         console.log('Response from backend:', response.data);
-        return true;
+          computedData.value = response.data;
+          const ccMetric = response.data.metrics_data.find((m) => m.cc)?.cc?.[0];
+          if (ccMetric) {
+              computedData.value.addedLines = ccMetric.data.added_lines;
+          }
       } catch (error) {
         console.error('Error sending data to backend:', error);
         return false;
       }
-    };
+      };
+
+
 
     const handleBenchmarkSubmit = async () => {
       showBenchmarkDialog.value = false; // close the dialog
@@ -272,6 +288,7 @@ export default {
       benchmarkInputs,
       handleBenchmarkSubmit,
       showBenchmarkLines,
+      selectedMetrics,
     };
   },
 };
