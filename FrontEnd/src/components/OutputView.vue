@@ -160,6 +160,22 @@ export default {
             historyKey: 'history',                 
             classScoped: false
        },
+       {
+            value: 'MTTR',
+            label: 'Mean Time to Repair',
+            benchmarkKey: 'mttr_benchmark',
+            currentKey: 'data',
+            historyKey: 'history',
+            classScoped: false
+        },
+        {
+            value: 'ICI',
+            label: 'ICI',
+            benchmarkKey: 'ici_benchmark',
+            currentKey: 'data',
+            historyKey: 'history',
+            classScoped: false
+        },
     ];
 
     const selectedMetric = ref(METRICS[0].value);

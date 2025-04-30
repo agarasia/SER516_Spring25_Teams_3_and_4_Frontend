@@ -23,6 +23,8 @@
                   <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead</label>
                   <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of Code</label>
                   <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics" @change="handleMetricChange" /> Defects Over Time</label>
+                  <label><input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" /> MTTR</label>
+                  <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" /> ICI</label>
               </div>
           </div>
 
@@ -225,6 +227,38 @@ export default {
                           total_commits: cc.data.total_commits
                       }
                   };
+              }
+
+              if (Array.isArray(group.ici) && group.ici.length) {
+                  const ici = group.ici[0];
+
+                  transformed.ICI = {
+                      timestamp: ici.timestamp ?? Date.now(),
+                      data: {
+                          ici_score: ici.data.ici_score,
+                          repo_size_mb: ici.data.repo_size_mb
+                      }
+                  };
+              }
+
+              if (Array.isArray(group.mttr) && group.mttr.length) {
+                  const mttr = group.mttr[0];
+
+                  if (mttr.data
+                      && typeof mttr.data === 'object'
+                      && mttr.data.error === null
+                      && typeof mttr.data.mttr === 'number') {
+                      transformed.MTTR = {
+                          timestamp: mttr.timestamp ?? Date.now(),
+                          data: mttr.data.mttr
+                      }
+                  }
+                  else {
+                      transformed.MTTR = {
+                          timestamp: mttr.timestamp ?? Date.now(),
+                          data: 0.0
+                      };
+                  }
               }
 
               if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
