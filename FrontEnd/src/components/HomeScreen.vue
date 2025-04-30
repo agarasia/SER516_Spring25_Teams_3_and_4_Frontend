@@ -1,38 +1,43 @@
 <template>
-  <header v-if="!showOutput">
+  <!-- <header v-if="!showOutput">
     <h1>Software Quality Metric Calculator</h1>
-  </header>
+  </header> -->
   <main>
     <!-- Show Input Form if OutputView or BenchmarkDialog is Hidden -->
-      <div v-if="!showOutput && !showBenchmarkDialog">
-          <div class="input-container1">
-              <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If we do not have any data for the entered repository URL, then it may take some time to compute and assess historical data.</p>
-              <label for="github-url">Enter GitHub Repository URL:</label>
-              <input type="text"
-                     id="github-url"
-                     v-model="githubUrl"
-                     placeholder="https://github.com/user/repository"
-                     @keyup.enter="checkGitHubRepoExists" />
-              <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
-              <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
-                  {{ errorMessages.githubUrl }}
-              </p>
-              <div class="metric-selection">
-                  <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
-                  <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" /> Cyclomatic Complexity</label>
-                  <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead</label>
-                  <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of Code</label>
-                  <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics" @change="handleMetricChange" /> Defects Over Time</label>
-                  <label><input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" /> MTTR</label>
-                  <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" /> ICI</label>
-              </div>
-          </div>
+    <div v-if="!showOutput && !showBenchmarkDialog">
+      <div class="input-container1">
+        <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If
+          we do not have any data for the entered repository URL, then it may take some time to compute and assess
+          historical data.</p>
+        <label for="github-url">Enter GitHub Repository URL:</label>
+        <input type="text" id="github-url" v-model="githubUrl" placeholder="https://github.com/user/repository"
+          @keyup.enter="checkGitHubRepoExists" />
+        <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
+        <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
+          {{ errorMessages.githubUrl }}
+        </p>
+        <div class="metric-selection">
+          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+          <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+            Cyclomatic Complexity</label>
+          <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
+            Halstead</label>
+          <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+            Code</label>
+          <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
+              @change="handleMetricChange" /> Defects Over Time</label>
+          <label><input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
+            MTTR</label>
+          <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+            ICI</label>
+        </div>
+      </div>
 
 
 
-          <br />
-          <br />
-          <!-- <div class="container-wrapper">
+      <br />
+      <br />
+      <!-- <div class="container-wrapper">
       <div class="input-container2" v-if="isValidRepo">
         <label>All metrics will be calculated automatically.</label>
       </div>
@@ -40,15 +45,14 @@
     </div>
     <br />
     <br /> -->
-          <button @click="submitData"
-                  :disabled="!isValidRepo">
-              {{ buttonText }}
-          </button>
-          <h4 class="loading-text" v-if="isLoading">
-              Please Wait, your metrics are being computed.<br />
-              The larger the repo, the longer the time.
-          </h4>
-      </div>
+      <button @click="submitData" :disabled="!isValidRepo">
+        {{ buttonText }}
+      </button>
+      <h4 class="loading-text" v-if="isLoading">
+        Please Wait, your metrics are being computed.<br />
+        The larger the repo, the longer the time.
+      </h4>
+    </div>
 
     <!-- Benchmark Input Dialog -->
     <div v-if="showBenchmarkDialog" class="dialog-overlay">
@@ -59,43 +63,29 @@
         </h4>
         <br />
         <div class="benchmark-container">
-            <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
-        <div class="label-input-container">
-          <label :for="`benchmark-${metric.value}`">
-            {{ metric.label }} Benchmark:
-          </label>
-          <input
-            type="number"
-            :id="`benchmark-${metric.value}`"
-            v-model.number="benchmarkInputs[metric.benchmarkKey]"
-            :placeholder="`Enter ${metric.label} benchmark`"
-          />
+          <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
+            <div class="label-input-container">
+              <label :for="`benchmark-${metric.value}`">
+                {{ metric.label }} Benchmark:
+              </label>
+              <input type="number" :id="`benchmark-${metric.value}`"
+                v-model.number="benchmarkInputs[metric.benchmarkKey]"
+                :placeholder="`Enter ${metric.label} benchmark`" />
+            </div>
+          </div>
         </div>
       </div>
-        </div>
-        </div>
 
-    <div class="button-container">
+      <div class="button-container">
         <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
-    </div>  <OutputView
-      :computedData="computedData"
-      :benchmarks="benchmarks"
-      :showBenchmarkLines="showBenchmarkLines"
-      v-if="showOutput"
-      @goBack="showFormAgain"
-      @updateBenchmarks="postBenchmarks"
-    />
       </div>
+      <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
+        v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
+    </div>
 
     <!-- Show Output Screen After Validation -->
-    <OutputView
-      :computedData="computedData"
-      :benchmarks="benchmarks"
-      :showBenchmarkLines="showBenchmarkLines"
-      v-if="showOutput"
-      @goBack="showFormAgain"
-      @updateBenchmarks="postBenchmarks"
-    />
+    <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
   </main>
   <!-- Footer Section -->
   <footer class="footer" v-if="!showOutput">
@@ -199,7 +189,7 @@ export default {
 
       try {
         await calculateMetrics();
-        showBenchmarkDialog.value = true;
+        // showBenchmarkDialog.value = true;
       } catch (e) {
         console.error(e);
       } finally {
@@ -208,138 +198,138 @@ export default {
       }
     };
 
-      const calculateMetrics = async () => {
+    const calculateMetrics = async () => {
 
       try {
         const metrics = selectedMetrics.value;
         const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
-        const { data } = await axios.get(req);            
+        const { data } = await axios.get(req);
         const transformed = {};
-          (data.metrics_data ?? []).forEach(group => {
-              if (Array.isArray(group.cc) && group.cc.length) {
-                  const cc = group.cc[0];
-                  transformed.CC = {
-                      timestamp: cc.timestamp ?? Date.now(),
-                      data: {
-                          added_lines: cc.data.added_lines,
-                          deleted_lines: cc.data.deleted_lines,
-                          modified_lines: cc.data.modified_lines,
-                          total_commits: cc.data.total_commits
-                      }
-                  };
+        (data.metrics_data ?? []).forEach(group => {
+          if (Array.isArray(group.cc) && group.cc.length) {
+            const cc = group.cc[0];
+            transformed.CC = {
+              timestamp: cc.timestamp ?? Date.now(),
+              data: {
+                added_lines: cc.data.added_lines,
+                deleted_lines: cc.data.deleted_lines,
+                modified_lines: cc.data.modified_lines,
+                total_commits: cc.data.total_commits
               }
+            };
+          }
 
-              if (Array.isArray(group.ici) && group.ici.length) {
-                  const ici = group.ici[0];
+          if (Array.isArray(group.ici) && group.ici.length) {
+            const ici = group.ici[0];
 
-                  transformed.ICI = {
-                      timestamp: ici.timestamp ?? Date.now(),
-                      data: {
-                          ici_score: ici.data.ici_score,
-                          repo_size_mb: ici.data.repo_size_mb
-                      }
-                  };
+            transformed.ICI = {
+              timestamp: ici.timestamp ?? Date.now(),
+              data: {
+                ici_score: ici.data.ici_score,
+                repo_size_mb: ici.data.repo_size_mb
               }
+            };
+          }
 
-              if (Array.isArray(group.mttr) && group.mttr.length) {
-                  const mttr = group.mttr[0];
+          if (Array.isArray(group.mttr) && group.mttr.length) {
+            const mttr = group.mttr[0];
 
-                  if (mttr.data
-                      && typeof mttr.data === 'object'
-                      && mttr.data.error === null
-                      && typeof mttr.data.mttr === 'number') {
-                      transformed.MTTR = {
-                          timestamp: mttr.timestamp ?? Date.now(),
-                          data: mttr.data.mttr
-                      }
+            if (mttr.data
+              && typeof mttr.data === 'object'
+              && mttr.data.error === null
+              && typeof mttr.data.mttr === 'number') {
+              transformed.MTTR = {
+                timestamp: mttr.timestamp ?? Date.now(),
+                data: mttr.data.mttr
+              }
+            }
+            else {
+              transformed.MTTR = {
+                timestamp: mttr.timestamp ?? Date.now(),
+                data: 0.0
+              };
+            }
+          }
+
+          if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
+
+            const defects = group['defects-over-time'][0];
+            transformed.DefectsOverTime = {
+              timestamp: group['defects-over-time'].timestamp ?? Date.now(),
+              data: {
+                avg_time_to_close: defects.data.average_time_to_close,
+                completed_issues: defects.data.completed_issues,
+                defect_closure_rate_30d: defects.data.defect_closure_rate_last_30_days,
+                defect_discovery_rate_30d: defects.data.defect_discovery_rate_last_30_days,
+                open_issues: defects.data.open_issues,
+                percent_completed: defects.data.percent_completed,
+                total_issues: defects.data.total_issues
+              }
+            };
+          }
+
+          if (Array.isArray(group.loc) && group.loc.length) {
+            const loc = group.loc[0];
+
+            transformed.LOC = {
+              timestamp: loc.timestamp ?? Date.now(),
+              data: loc.data
+            };
+          }
+
+          if (Array.isArray(group.hal) && group.hal.length) {
+            const hal = group.hal[0];
+            let metrics = {};
+            if (Array.isArray(hal.data)) {
+              const summary = hal.data.find(e => e.Summary)?.Summary;
+              const firstFile = hal.data.find(e => e.metrics)?.metrics;
+              metrics = summary ?? firstFile ?? {};
+            }
+            transformed.Halstead = {
+              timestamp: hal.timestamp ?? Date.now(),
+              data: {
+                difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
+                effort: metrics['Total Efforts'] ?? metrics.Effort,
+                //volume: metrics['Total Program Volume'] ?? metrics['Program Volume'],
+                //vocabulary: metrics['Total Program Vocabulary'] ?? metrics['Program Vocabulary'],
+                //length: metrics['Total Program Length'] ?? metrics['Program Length']
+              }
+            };
+          }
+
+          if (Array.isArray(group.cyclo) && group.cyclo.length) {
+            const cyclo = group.cyclo[0];
+            let metrics = {};
+
+            if (Array.isArray(cyclo.data)) {
+              cyclo.data.forEach(entry => {
+                for (const [key, value] of Object.entries(entry)) {
+                  if (typeof value === 'number') {
+                    metrics[key] = value;
                   }
-                  else {
-                      transformed.MTTR = {
-                          timestamp: mttr.timestamp ?? Date.now(),
-                          data: 0.0
-                      };
-                  }
-              }
-
-              if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
-
-                  const defects = group['defects-over-time'][0];
-                  transformed.DefectsOverTime = {
-                      timestamp: group['defects-over-time'].timestamp ?? Date.now(),
-                      data: {
-                          avg_time_to_close: defects.data.average_time_to_close,
-                          completed_issues: defects.data.completed_issues,
-                          defect_closure_rate_30d: defects.data.defect_closure_rate_last_30_days,
-                          defect_discovery_rate_30d: defects.data.defect_discovery_rate_last_30_days,
-                          open_issues: defects.data.open_issues,
-                          percent_completed: defects.data.percent_completed,
-                          total_issues: defects.data.total_issues
-                      }
-                  };
-              }
-
-              if (Array.isArray(group.loc) && group.loc.length) {
-                  const loc = group.loc[0];
-
-                  transformed.LOC = {
-                      timestamp: loc.timestamp ?? Date.now(),
-                      data: loc.data
-                  };
-              }
-
-              if (Array.isArray(group.hal) && group.hal.length) {
-                  const hal = group.hal[0];
-                  let metrics = {};
-                  if (Array.isArray(hal.data)) {
-                      const summary = hal.data.find(e => e.Summary)?.Summary;
-                      const firstFile = hal.data.find(e => e.metrics)?.metrics;
-                      metrics = summary ?? firstFile ?? {};   
-                  }
-                  transformed.Halstead = {
-                      timestamp: hal.timestamp ?? Date.now(),
-                      data: {
-                          difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
-                          effort: metrics['Total Efforts'] ?? metrics.Effort,
-                          //volume: metrics['Total Program Volume'] ?? metrics['Program Volume'],
-                          //vocabulary: metrics['Total Program Vocabulary'] ?? metrics['Program Vocabulary'],
-                          //length: metrics['Total Program Length'] ?? metrics['Program Length']
-                      }
-                  };
-              }
-
-              if (Array.isArray(group.cyclo) && group.cyclo.length) {
-                  const cyclo = group.cyclo[0];
-                  let metrics = {};
-
-                  if (Array.isArray(cyclo.data)) {
-                      cyclo.data.forEach(entry => {
-                          for (const [key, value] of Object.entries(entry)) {
-                              if (typeof value === 'number') {
-                                  metrics[key] = value;
-                              }
-                          }
-                      });
-                  }
-                  transformed.Cyclo = {
-                      timestamp: cyclo.timestamp ?? Date.now(),
-                      data: {
-                          total_cyclomatic: metrics['total cyclomatic complexity']
-                          //max_cyclomatic: metrics['max cyclomatic complexity'],
-                          //functions_evaluated: metrics['functions evaluated']
-                          //average_cyclomatic: metrics['average cyclomatic complexity'],
-
-                      }
-                  };
+                }
+              });
+            }
+            transformed.Cyclo = {
+              timestamp: cyclo.timestamp ?? Date.now(),
+              data: {
+                total_cyclomatic: metrics['total cyclomatic complexity']
+                //max_cyclomatic: metrics['max cyclomatic complexity'],
+                //functions_evaluated: metrics['functions evaluated']
+                //average_cyclomatic: metrics['average cyclomatic complexity'],
 
               }
-          });
-          computedData.value = transformed;
-          showBenchmarkDialog.value = true;  
+            };
+
+          }
+        });
+        computedData.value = transformed;
+        showBenchmarkDialog.value = true;
       } catch (error) {
         console.error('Error sending data to backend:', error);
         return false;
       }
-      };
+    };
 
 
 
