@@ -226,15 +226,18 @@ export default {
               }
 
               if (Array.isArray(group.hal) && group.hal.length) {
-                  const cc = group.hal[0];
+                  const hal = group.hal[0];
+                  let metrics = {};
+                  if (Array.isArray(hal.data)) {
+                      const summary = hal.data.find(e => e.Summary)?.Summary;
+                      const firstFile = hal.data.find(e => e.metrics)?.metrics;
+                      metrics = summary ?? firstFile ?? {};   
+                  }
                   transformed.Halstead = {
                       timestamp: hal.timestamp ?? Date.now(),
                       data: {
-                          difficulty: hal.metrics.Difficulty,
-                          effort: hal.metrics.Effort,
-                          volume: hal.metrics.ProgramVolume,
-                          vocabulary: hal.metrics.ProgramVocabulary,
-                          length: hal.metrics.ProgramLength
+                          difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
+                          effort: metrics['Total Efforts'] ?? metrics.Effort,
                       }
                   };
               }
