@@ -40,7 +40,7 @@ jobs:
           fi
 
           # Build the Docker image
-          docker build -t app-frontend Frontend -f FrontEnd/.
+          docker build -t app-frontend Frontend -f FrontEnd/dockerfile
 
       - name: Log in to Docker Hub
         run: |
