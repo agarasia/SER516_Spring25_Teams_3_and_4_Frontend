@@ -17,10 +17,15 @@
           <!-- Sidebar -->
           <div class="sidebar">
             <h3>Toggle Metrics</h3><br>
-            <div v-for="metric in availableMetrics" :key="metric.value" class="toggle-item">
-              <input type="checkbox" :id="metric.value" :value="metric.value" v-model="selectedMetrics" />
-              <label :for="metric.value">{{ metric.label }}</label>
-            </div>
+            <ul>
+              <li :class="{ active: selectedMetric === 'All' }" @click="filterByMetric('All')">
+                All Metrics
+              </li>
+              <li v-for="metric in availableMetrics" :key="metric.value"
+                :class="{ active: selectedMetric === metric.label }" @click="filterByMetric(metric.label)">
+                {{ metric.label }}
+              </li>
+            </ul>
           </div>
         </td>
         <td style="padding-left: 2em;">
@@ -36,7 +41,7 @@
           </p>
 
           <div class="metrics-guide-box" style="margin-left: -2.7%; border: 0; box-shadow: none;">
-            <div v-for="metric in availableMetrics" :key="metric.value" class="chart-container">
+            <div v-for="metric in displayedMetrics" :key="metric.value" class="chart-container">
               <h3 class="chart-heading">{{ metric.label }}</h3>
               <div class="chart-content">
                 <Line :data="getChartData(metric.value)" :options="chartOptions" />
@@ -92,7 +97,39 @@ export default {
       metric.filter((m) => props.computedData[m.value])
     );
 
-    const selectedMetrics = ref(metric.map((m) => m.value));
+    const selectedMetrics = ref(availableMetrics.value.map((m) => m.value));
+
+    const selectedMetric = ref('All');
+
+    const displayedMetrics = computed(() => {
+      return availableMetrics.value.filter((metric) => selectedMetrics.value.includes(metric.value));
+    });
+
+    function toggleMetric(metricValue) {
+      if (selectedMetrics.value.includes(metricValue)) {
+        selectedMetrics.value = selectedMetrics.value.filter((m) => m !== metricValue);
+      } else {
+        selectedMetrics.value.push(metricValue);
+      }
+    }
+
+    // Select all metrics
+    function selectAllMetrics() {
+      selectedMetrics.value = availableMetrics.value.map((m) => m.value);
+    }
+
+    // Filter metrics by category
+    function filterByMetric(value) {
+      selectedMetric.value = value;
+
+      if (value === 'All') {
+        // If "All" is selected, include all available metrics
+        selectedMetrics.value = availableMetrics.value.map((m) => m.value);
+      } else {
+        // If a specific metric is selected, ensure only that metric is in the selectedMetrics array
+        selectedMetrics.value = [availableMetrics.value.find((m) => m.label === value).value];
+      }
+    }
 
     const timestamps = computed(() => {
       const timestamps = [];
@@ -209,6 +246,11 @@ export default {
       metric,
       availableMetrics,
       selectedMetrics,
+      selectedMetric,
+      displayedMetrics,
+      toggleMetric,
+      selectAllMetrics,
+      filterByMetric,
       graphLabels,
       graphData,
       getChartData,
