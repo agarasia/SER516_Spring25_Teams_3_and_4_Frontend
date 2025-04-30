@@ -4,43 +4,46 @@
   </header>
   <main>
     <!-- Show Input Form if OutputView or BenchmarkDialog is Hidden -->
-    <div v-if="!showOutput && !showBenchmarkDialog">
-      <div class="input-container1">
-        <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If we do not have any data for the entered repository URL, then it may take some time to compute and assess historical data.</p>
-        <label for="github-url">Enter GitHub Repository URL:</label>
-        <input
-          type="text"
-          id="github-url"
-          v-model="githubUrl"
-          placeholder="https://github.com/user/repository"
-          @keyup.enter="checkGitHubRepoExists"
-        />
-        <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
-        <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
-          {{ errorMessages.githubUrl }}
-        </p>
+      <div v-if="!showOutput && !showBenchmarkDialog">
+          <div class="input-container1">
+              <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If we do not have any data for the entered repository URL, then it may take some time to compute and assess historical data.</p>
+              <label for="github-url">Enter GitHub Repository URL:</label>
+              <input type="text"
+                     id="github-url"
+                     v-model="githubUrl"
+                     placeholder="https://github.com/user/repository"
+                     @keyup.enter="checkGitHubRepoExists" />
+              <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
+              <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
+                  {{ errorMessages.githubUrl }}
+              </p>
+          </div>
+
+          <div class="metric-selection">
+              <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+              <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead</label>
+              <label><input type="checkbox" value="defects" v-model="selectedMetrics" @change="handleMetricChange" /> Defects</label>
+          </div>
+
+          <br />
+          <br />
+          <!-- <div class="container-wrapper">
+      <div class="input-container2" v-if="isValidRepo">
+        <label>All metrics will be calculated automatically.</label>
       </div>
 
-      <br />
-      <br />
-      <!-- <div class="container-wrapper">
-        <div class="input-container2" v-if="isValidRepo">
-          <label>All metrics will be calculated automatically.</label>
-        </div>
-      </div>
-      <br />
-      <br /> -->
-      <button
-        @click="submitData"
-        :disabled="!isValidRepo"
-      >
-        {{ buttonText }}
-      </button>
-      <h4 class="loading-text" v-if="isLoading">
-        Please Wait, your metrics are being computed.<br />
-        The larger the repo, the longer the time.
-      </h4>
     </div>
+    <br />
+    <br /> -->
+          <button @click="submitData"
+                  :disabled="!isValidRepo">
+              {{ buttonText }}
+          </button>
+          <h4 class="loading-text" v-if="isLoading">
+              Please Wait, your metrics are being computed.<br />
+              The larger the repo, the longer the time.
+          </h4>
+      </div>
 
     <!-- Benchmark Input Dialog -->
     <div v-if="showBenchmarkDialog" class="dialog-overlay">
@@ -116,43 +119,6 @@ export default {
     const buttonText = ref('Calculate');
     const isLoading = ref(false);
 
-    const availableMetrics = [
-      {
-        value: 'LCOM4',
-        label: 'LCOM4',
-        benchmarkKey: 'lcom4_benchmark',
-      },
-      {
-        value: 'LCOMHS',
-        label: 'LCOMHS',
-        benchmarkKey: 'lcomhs_benchmark',
-      },
-      {
-        value: 'DefectScore',
-        label: 'Defect Score',
-        benchmarkKey: 'defect_score_benchmark',
-      },
-      {
-        value: 'AfferentCoupling',
-        label: 'Afferent Coupling',
-        benchmarkKey: 'afferent_coupling_benchmark',
-      },
-      {
-        value: 'EfferentCoupling',
-        label: 'Efferent Coupling',
-        benchmarkKey: 'efferent_coupling_benchmark',
-      },
-      {
-        value: 'DefectDensityAnalysis',
-        label: 'Defect Density Analysis',
-        benchmarkKey: 'defect_density_analysis_benchmark',
-      },
-      {
-        value: 'Instability',
-        label: 'Instability',
-        benchmarkKey: 'instability_benchmark',
-      },
-    ];
 
     const isValidGitHubUrl = (url) => {
       const regex = /^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/;
@@ -296,7 +262,6 @@ export default {
       showFormAgain,
       checkGitHubRepoExists,
       isValidRepo,
-      availableMetrics,
       computedData,
       benchmarks,
       tagsData,
