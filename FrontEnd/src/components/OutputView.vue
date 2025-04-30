@@ -136,6 +136,14 @@ export default {
         historyKey: 'history',
         classScoped: false
       },
+      {
+        value: 'Cyclo',
+        label: 'Cyclomatic Complexity',
+        benchmarkKey: 'cyclo_benchmark',
+        currentKey: 'data',
+        historyKey: 'history',
+        classScoped: false
+      },
     ];
 
     const selectedMetric = ref(METRICS[0].value);

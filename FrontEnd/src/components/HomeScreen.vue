@@ -21,6 +21,7 @@
                   <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
                   <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" /> Cyclomatic Complexity</label>
                   <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead</label>
+                  <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of Code</label>
               </div>
           </div>
 
@@ -243,6 +244,32 @@ export default {
                           //length: metrics['Total Program Length'] ?? metrics['Program Length']
                       }
                   };
+              }
+
+              if (Array.isArray(group.cyclo) && group.cyclo.length) {
+                  const cyclo = group.cyclo[0];
+                  let metrics = {};
+
+                  if (Array.isArray(cyclo.data)) {
+                      cyclo.data.forEach(entry => {
+                          for (const [key, value] of Object.entries(entry)) {
+                              if (typeof value === 'number') {
+                                  metrics[key] = value;
+                              }
+                          }
+                      });
+                  }
+                  transformed.Cyclo = {
+                      timestamp: cyclo.timestamp ?? Date.now(),
+                      data: {
+                          total_cyclomatic: metrics['total cyclomatic complexity']
+                          //max_cyclomatic: metrics['max cyclomatic complexity'],
+                          //functions_evaluated: metrics['functions evaluated']
+                          //average_cyclomatic: metrics['average cyclomatic complexity'],
+
+                      }
+                  };
+
               }
           });
           computedData.value = transformed;
