@@ -209,13 +209,38 @@ export default {
       try {
         const metrics = selectedMetrics.value;
         const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
-        const response = await axios.get(req);
-        console.log('Response from backend:', response.data);
-          computedData.value = response.data;
-          const ccMetric = response.data.metrics_data.find((m) => m.cc)?.cc?.[0];
-          if (ccMetric) {
-              computedData.value.addedLines = ccMetric.data.added_lines;
-          }
+        const { data } = await axios.get(req);            
+        const transformed = {};
+          (data.metrics_data ?? []).forEach(group => {
+              if (Array.isArray(group.cc) && group.cc.length) {
+                  const cc = group.cc[0];
+                  transformed.CC = {
+                      timestamp: cc.timestamp ?? Date.now(),
+                      data: {
+                          added_lines: cc.data.added_lines,
+                          deleted_lines: cc.data.deleted_lines,
+                          modified_lines: cc.data.modified_lines,
+                          total_commits: cc.data.total_commits
+                      }
+                  };
+              }
+
+              if (Array.isArray(group.hal) && group.hal.length) {
+                  const cc = group.hal[0];
+                  transformed.Halstead = {
+                      timestamp: hal.timestamp ?? Date.now(),
+                      data: {
+                          difficulty: hal.metrics.Difficulty,
+                          effort: hal.metrics.Effort,
+                          volume: hal.metrics.ProgramVolume,
+                          vocabulary: hal.metrics.ProgramVocabulary,
+                          length: hal.metrics.ProgramLength
+                      }
+                  };
+              }
+          });
+          computedData.value = transformed;
+          showBenchmarkDialog.value = true;  
       } catch (error) {
         console.error('Error sending data to backend:', error);
         return false;

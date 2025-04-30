@@ -119,7 +119,23 @@ export default {
         currentKey: 'current_instability',
         historyKey: 'instability_history',
         classScoped: true
-        }, 
+        },
+      {
+        value: 'CC',                   
+        label: 'Code Churn (CC)',
+        benchmarkKey: 'cc_benchmark',  
+        currentKey: 'data',           
+        historyKey: 'history',       
+        classScoped: false            
+      }, 
+      {
+        value: 'Halstead',            
+        label: 'Halstead Metrics',
+        benchmarkKey: 'hal_benchmark',
+        currentKey: 'data',
+        historyKey: 'history',
+        classScoped: false
+      },
     ];
 
     const selectedMetric = ref(METRICS[0].value);
