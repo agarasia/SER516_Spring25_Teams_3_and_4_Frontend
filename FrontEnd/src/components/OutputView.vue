@@ -1,25 +1,56 @@
 <template>
-  <div class="page-container">
-    <!-- Back Button -->
+  <div class="metrics-guide-container">
     <button class="back-button" @click="$emit('goBack')">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round" class="arrow-icon">
         <line x1="20" y1="12" x2="4" y2="12"></line>
         <polyline points="10 18 4 12 10 6"></polyline>
       </svg>
-      Back to Home
+      Back
     </button>
+    <!-- Metrics Content -->
+    <div class="metrics-guide-box-1">
+      <p class="metrics-guide-heading">Results</p>
+      <hr style="width: 3.8%; margin-left: 1.45em; height: 2px; background-color: #4A6C8B;">
+      <table style="width: 100%; margin-top: 0em; margin-left:-1em">
+        <td style="width: 20%; padding-right: 2em; padding-left: 2em;">
+          <!-- Sidebar -->
+          <div class="sidebar">
+            <h3>Toggle Metrics</h3><br>
+            <div v-for="metric in availableMetrics" :key="metric.value" class="toggle-item">
+              <input type="checkbox" :id="metric.value" :value="metric.value" v-model="selectedMetrics" />
+              <label :for="metric.value">{{ metric.label }}</label>
+            </div>
+          </div>
+        </td>
+        <td style="padding-left: 2em;">
+          <p id="metrics-guide-overview" style="font-weight: 500;">
+            The Metrics Guide offers a thorough description of the many software quality metrics that are used to assess
+            and
+            enhance your codebase's readability, maintainability, and general quality. These metrics assist teams and
+            developers in spotting any problems, improving performance, and making sure the code complies with best
+            practices. You can attain greater software quality and dependability by prioritizing development efforts,
+            testing, and refactoring using knowledge of these metrics.<br><br>
+            The following page elucidates the various metrics and their significance in the context of software
+            development.
+          </p>
 
-    <div v-for="metric in availableMetrics" :key="metric.value" class="chart-container">
-      <h3>{{ metric.label }}</h3>
-      <Line :data="getChartData(metric.value)" :options="chartOptions" />
+          <div class="metrics-guide-box" style="margin-left: -2.7%; border: 0; box-shadow: none;">
+            <div v-for="metric in availableMetrics" :key="metric.value" class="chart-container">
+              <h3 class="chart-heading">{{ metric.label }}</h3>
+              <div class="chart-content">
+                <Line :data="getChartData(metric.value)" :options="chartOptions" />
+              </div>
+            </div>
+          </div>
+        </td>
+      </table>
     </div>
-
   </div>
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -60,6 +91,8 @@ export default {
     const availableMetrics = computed(() =>
       metric.filter((m) => props.computedData[m.value])
     );
+
+    const selectedMetrics = ref(metric.map((m) => m.value));
 
     const timestamps = computed(() => {
       const timestamps = [];
@@ -175,6 +208,7 @@ export default {
     return {
       metric,
       availableMetrics,
+      selectedMetrics,
       graphLabels,
       graphData,
       getChartData,
@@ -189,7 +223,7 @@ export default {
 <style scoped>
 .page-container {
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: #f4f4f5;
   border-radius: 8px;
 }
 
@@ -204,7 +238,7 @@ export default {
   padding: 10px 15px;
   font-size: 14px;
   cursor: pointer;
-  margin-bottom: 20px;
+  margin: 50px 20px 20px 20px;
   transition: background-color 0.3s;
 }
 
@@ -229,7 +263,217 @@ export default {
   margin: 5px 0;
 }
 
+.layout-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  /* Ensure the layout container spans the full width */
+}
+
+.side-panel {
+  width: 20%;
+  /* Adjust the width of the side panel */
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1em;
+  border: 1px solid #ddd;
+}
+
+.toggle-item {
+  margin-bottom: 10px;
+}
+
+.visualization-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  width: 80%;
+  /* Adjust the width of the visualization container */
+}
+
 .chart-container {
+  width: 100%;
+  /* Ensure the chart container spans the full width of its parent */
+  max-width: 800px;
+  /* Optional: Set a max width for better readability */
   height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2em;
+  border: 1px solid #ddd;
+  gap: 10px;
+  margin-bottom: 2em;
+}
+
+.chart-heading {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.chart-content {
+  width: 100%;
+  height: 100%;
+}
+
+.main-content {
+  border-radius: 10px;
+  background-color: #fefffe;
+  width: 100%;
+  /* Ensure the main content spans the full width */
+  padding: 2em;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.metrics-guide-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* Align content to the top */
+  background-color: #f5f5f5;
+  /* Optional: Add a light background color */
+  /* padding-top: 5em; Ensure consistent space at the top */
+  padding-bottom: 5em;
+  /* Ensure consistent space at the bottom */
+  min-height: 100vh;
+  /* Ensure the container takes at least the full viewport height */
+  box-sizing: border-box;
+  /* Include padding in the height calculation */
+}
+
+.metric-heading-container {
+  display: flex;
+  margin-bottom: 1em;
+  /* Space below the heading */
+}
+
+#metrics-guide-overview {
+  font-size: 1.2em;
+  color: #555;
+  /* Optional: Change text color */
+  margin-top: 2.5em;
+  /* Space above the paragraph */
+  margin-bottom: 4em;
+  /* Space below the paragraph */
+  margin-right: 2em;
+  /* Space to the right */
+}
+
+.metrics-guide-heading {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #333;
+  /* Optional: Change text color */
+  margin-bottom: -0.4em;
+  margin-left: 0.5em;
+  /* Space below the heading */
+}
+
+.metrics-guide-box-1 {
+  width: 85vw;
+  /* Optional: Limit the maximum width */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+  margin: 3em;
+  padding-left: 1.5em;
+  background-color: #fff;
+  /* Optional: Add a white background for contrast */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Optional: Add a subtle shadow */
+}
+
+.metrics-guide-box {
+  width: auto;
+  max-width: 1200px;
+  /* Optional: Limit the maximum width */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+  margin: 3em;
+  padding-left: 1.5em;
+  background-color: #fff;
+  /* Optional: Add a white background for contrast */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Optional: Add a subtle shadow */
+}
+
+.metric-heading {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  /* Optional: Change text color */
+  margin-bottom: -0.4em;
+  /* Space below the heading */
+}
+
+.important-considerations {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.important-header {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.important-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.sidebar {
+  width: 100%;
+  margin-top: 3em;
+  font-size: small;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.sidebar li:hover {
+  background-color: #f5f5f5;
+}
+
+.sidebar li.active {
+  background-color: #4A6C8B;
+  color: #fff;
+}
+
+.category-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
 }
 </style>
