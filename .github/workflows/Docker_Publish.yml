@@ -23,13 +23,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug Repository Files
+        run: |
+          echo "Listing repository structure for debugging:"
+          ls -R
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker Images
         run: |
+          # Ensure the FrontEnd directory exists
+          if [ ! -d "FrontEnd" ]; then
+            echo "Error: FrontEnd directory is missing."
+            exit 1
+          fi
+
+          # Build the Docker image
           docker build -t app-frontend FrontEnd -f FrontEnd/dockerfile
-  
+
       - name: Log in to Docker Hub
         run: |
           echo "${{ env.DOCKERHUB_TOKEN }}" | docker login -u "${{ env.DOCKERHUB_USERNAME }}" --password-stdin
