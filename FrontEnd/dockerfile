@@ -6,7 +6,7 @@ COPY FrontEnd/package*.json ./
 RUN npm ci                     
 # reproducible install
 
-COPY FrontEnd/ .
+COPY . .
 RUN npm run build              
 # produces dist/ folder
 
