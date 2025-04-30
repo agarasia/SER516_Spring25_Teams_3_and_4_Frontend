@@ -1,15 +1,13 @@
-
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-COPY FrontEnd/package*.json ./
+COPY package*.json ./
 RUN npm ci                     
 # reproducible install
 
 COPY . .
 RUN npm run build              
 # produces dist/ folder
-
 
 FROM nginx:1.27-alpine-slim
 # tiny, battle‑tested static server
