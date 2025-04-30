@@ -22,6 +22,7 @@
                   <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" /> Cyclomatic Complexity</label>
                   <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead</label>
                   <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of Code</label>
+                  <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics" @change="handleMetricChange" /> Defects Over Time</label>
               </div>
           </div>
 
@@ -223,6 +224,32 @@ export default {
                           modified_lines: cc.data.modified_lines,
                           total_commits: cc.data.total_commits
                       }
+                  };
+              }
+
+              if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
+
+                  const defects = group['defects-over-time'][0];
+                  transformed.DefectsOverTime = {
+                      timestamp: group['defects-over-time'].timestamp ?? Date.now(),
+                      data: {
+                          avg_time_to_close: defects.data.average_time_to_close,
+                          completed_issues: defects.data.completed_issues,
+                          defect_closure_rate_30d: defects.data.defect_closure_rate_last_30_days,
+                          defect_discovery_rate_30d: defects.data.defect_discovery_rate_last_30_days,
+                          open_issues: defects.data.open_issues,
+                          percent_completed: defects.data.percent_completed,
+                          total_issues: defects.data.total_issues
+                      }
+                  };
+              }
+
+              if (Array.isArray(group.loc) && group.loc.length) {
+                  const loc = group.loc[0];
+
+                  transformed.LOC = {
+                      timestamp: loc.timestamp ?? Date.now(),
+                      data: loc.data
                   };
               }
 

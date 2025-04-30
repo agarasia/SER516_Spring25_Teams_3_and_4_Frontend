@@ -65,85 +65,101 @@ export default {
   setup(props) {
     const METRICS = [
       {
-        value: 'LCOM4',
-        label: 'LCOM4',
-        benchmarkKey: 'lcom4_benchmark',
-        currentKey: 'current_lcom4',
-        historyKey: 'lcom4_history',
-        classScoped: true
+            value: 'LCOM4',
+            label: 'LCOM4',
+            benchmarkKey: 'lcom4_benchmark',
+            currentKey: 'current_lcom4',
+            historyKey: 'lcom4_history',
+            classScoped: true
       },
       {
-        value: 'LCOMHS',
-        label: 'LCOMHS',
-        benchmarkKey: 'lcomhs_benchmark',
-        currentKey: 'current_lcomhs',
-        historyKey: 'lcomhs_history',
-        classScoped: true
+            value: 'LCOMHS',
+            label: 'LCOMHS',
+            benchmarkKey: 'lcomhs_benchmark',
+            currentKey: 'current_lcomhs',
+            historyKey: 'lcomhs_history',
+            classScoped: true
       },
       {
-        value: 'DefectScore',
-        label: 'Defect Score',
-        benchmarkKey: 'defect_score_benchmark',
-        currentKey: 'current_defect_score',
-        historyKey: 'defect_score_history',
-        classScoped: false
+            value: 'DefectScore',
+            label: 'Defect Score',
+            benchmarkKey: 'defect_score_benchmark',
+            currentKey: 'current_defect_score',
+            historyKey: 'defect_score_history',
+            classScoped: false
       },
       {
-        value: 'AfferentCoupling',
-        label: 'Afferent Coupling',
-        benchmarkKey: 'afferent_coupling_benchmark',
-        currentKey: 'current_afferent',
-        historyKey: 'afferent_history',
-        classScoped: true
+            value: 'AfferentCoupling',
+            label: 'Afferent Coupling',
+            benchmarkKey: 'afferent_coupling_benchmark',
+            currentKey: 'current_afferent',
+            historyKey: 'afferent_history',
+            classScoped: true
       },
       {
-        value: 'EfferentCoupling',
-        label: 'Efferent Coupling',
-        benchmarkKey: 'efferent_coupling_benchmark',
-        currentKey: 'current_efferent',
-        historyKey: 'efferent_history',
-        classScoped: true
+            value: 'EfferentCoupling',
+            label: 'Efferent Coupling',
+            benchmarkKey: 'efferent_coupling_benchmark',
+            currentKey: 'current_efferent',
+            historyKey: 'efferent_history',
+            classScoped: true
       },
       {
-        value: 'DefectDensityAnalysis',
-        label: 'Defect Density Analysis',
-        benchmarkKey: 'defect_density_analysis_benchmark',
-        currentKey: 'current_defect_density',
-        historyKey: 'defect_density_history',
-        classScoped: false
+            value: 'DefectDensityAnalysis',
+            label: 'Defect Density Analysis',
+            benchmarkKey: 'defect_density_analysis_benchmark',
+            currentKey: 'current_defect_density',
+            historyKey: 'defect_density_history',
+            classScoped: false
       },
       {
-        value: 'Instability',
-        label: 'Instability',
-        benchmarkKey: 'instability_benchmark',
-        currentKey: 'current_instability',
-        historyKey: 'instability_history',
-        classScoped: true
+            value: 'Instability',
+            label: 'Instability',
+            benchmarkKey: 'instability_benchmark',
+            currentKey: 'current_instability',
+            historyKey: 'instability_history',
+            classScoped: true
         },
       {
-        value: 'CC',                   
-        label: 'Code Churn (CC)',
-        benchmarkKey: 'cc_benchmark',  
-        currentKey: 'data',           
-        historyKey: 'history',       
-        classScoped: false            
+            value: 'CC',                   
+            label: 'Code Churn (CC)',
+            benchmarkKey: 'cc_benchmark',  
+            currentKey: 'data',           
+            historyKey: 'history',       
+            classScoped: false            
       }, 
       {
-        value: 'Halstead',            
-        label: 'Halstead Metrics',
-        benchmarkKey: 'hal_benchmark',
-        currentKey: 'data',
-        historyKey: 'history',
-        classScoped: false
+            value: 'Halstead',            
+            label: 'Halstead Metrics',
+            benchmarkKey: 'hal_benchmark',
+            currentKey: 'data',
+            historyKey: 'history',
+            classScoped: false
       },
       {
-        value: 'Cyclo',
-        label: 'Cyclomatic Complexity',
-        benchmarkKey: 'cyclo_benchmark',
-        currentKey: 'data',
-        historyKey: 'history',
-        classScoped: false
-      },
+            value: 'Cyclo',
+            label: 'Cyclomatic Complexity',
+            benchmarkKey: 'cyclo_benchmark',
+            currentKey: 'data',
+            historyKey: 'history',
+            classScoped: false
+       },
+       {
+            value: 'LOC',
+            label: 'Lines Of Code',
+            benchmarkKey: 'loc_benchmark',
+            currentKey: 'data',
+            historyKey: 'history',
+            classScoped: false
+       },
+       {
+            value: 'DefectsOverTime',                  
+            label: 'Defects Over Time',
+            benchmarkKey: 'defects_benchmark',     
+            currentKey: 'data',
+            historyKey: 'history',                 
+            classScoped: false
+       },
     ];
 
     const selectedMetric = ref(METRICS[0].value);
