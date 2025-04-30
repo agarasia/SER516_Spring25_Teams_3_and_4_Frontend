@@ -1,20 +1,14 @@
 <template>
-  <header v-if="!showOutput">
-    <h1>Software Quality Metric Calculator</h1>
-  </header>
   <main>
     <!-- Show Input Form if OutputView or BenchmarkDialog is Hidden -->
     <div v-if="!showOutput && !showBenchmarkDialog">
       <div class="input-container1">
-        <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If we do not have any data for the entered repository URL, then it may take some time to compute and assess historical data.</p>
+        <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If
+          we do not have any data for the entered repository URL, then it may take some time to compute and assess
+          historical data.</p>
         <label for="github-url">Enter GitHub Repository URL:</label>
-        <input
-          type="text"
-          id="github-url"
-          v-model="githubUrl"
-          placeholder="https://github.com/user/repository"
-          @keyup.enter="checkGitHubRepoExists"
-        />
+        <input type="text" id="github-url" v-model="githubUrl" placeholder="https://github.com/user/repository"
+          @keyup.enter="checkGitHubRepoExists" />
         <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
         <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
           {{ errorMessages.githubUrl }}
@@ -30,10 +24,7 @@
       </div>
       <br />
       <br /> -->
-      <button
-        @click="submitData"
-        :disabled="!isValidRepo"
-      >
+      <button @click="submitData" :disabled="!isValidRepo">
         {{ buttonText }}
       </button>
       <h4 class="loading-text" v-if="isLoading">
@@ -52,35 +43,26 @@
         <br />
         <div class="benchmark-container">
           <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
-              <div class="label-input-container">
-                <label :for="`benchmark-${metric.value}`">
-                  {{ metric.label }} Benchmark:
-                </label>
-                <input
-                  type="number"
-                  :id="`benchmark-${metric.value}`"
-                  v-model.number="benchmarkInputs[metric.benchmarkKey]"
-                  :placeholder="`Enter ${metric.label} benchmark`"
-                />
-              </div>
+            <div class="label-input-container">
+              <label :for="`benchmark-${metric.value}`">
+                {{ metric.label }} Benchmark:
+              </label>
+              <input type="number" :id="`benchmark-${metric.value}`"
+                v-model.number="benchmarkInputs[metric.benchmarkKey]"
+                :placeholder="`Enter ${metric.label} benchmark`" />
             </div>
           </div>
         </div>
-
-        <div class="button-container">
-          <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
-        </div>
       </div>
 
+      <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
+      </div>
+    </div>
+
     <!-- Show Output Screen After Validation -->
-    <OutputView
-      :computedData="computedData"
-      :benchmarks="benchmarks"
-      :showBenchmarkLines="showBenchmarkLines"
-      v-if="showOutput"
-      @goBack="showFormAgain"
-      @updateBenchmarks="postBenchmarks"
-    />
+    <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
   </main>
   <!-- Footer Section -->
   <footer class="footer" v-if="!showOutput">
