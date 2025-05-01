@@ -185,25 +185,7 @@ export default {
           return;
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
-        // Finally, add repo to shared volume.
-        const req = githubUrl.value.toLowerCase();
-        const res = await axios.post(
-          'http://localhost:8080/add_repo',
-          { repo_url: req },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              mode: 'cors',
-            },
-          }
-        );
-        console.log('Response from backend:', res.data);
-        if (res.status === 200) {
-          console.log('Repository added successfully.');
-        } else {
-          console.error('Failed to add repository.');
-        }
+
         const req = githubUrl.value;
         const res = await axios.post(
           'http://localhost:8080/add_repo',
