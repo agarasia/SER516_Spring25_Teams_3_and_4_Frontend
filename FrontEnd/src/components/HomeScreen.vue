@@ -226,6 +226,11 @@ export default {
         buttonText.value = 'Calculate';
       }
     };
+    function sortByTimestamp<T extends { timestamp: string, data: any }>(arr: T[]) {
+      return [...arr].sort(
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+    }
 
     const calculateMetrics = async () => {
 
@@ -234,309 +239,165 @@ export default {
         const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`;
         const { data } = await axios.get(req);
         console.log('Response from backend:', data);
-        const transformed = {};
+        const transformed = {CC: {}, ICI: {}, MTTR: {}, DefectsOverTime: {}, LOC: {}, Halstead: {}, Cyclo: {}, DefectsStats: {}, LCOM4: {}, LCOMHS: {}, FogIndex: {}};
         (data.metrics_data ?? []).forEach(group => {
           if (Array.isArray(group.cc) && group.cc.length) {
-
-            const cc = group.cc;
-            let dates = [];
-            let added_lines_list = [];
-            let deleted_lines_list = [];
-            let modified_lines_list = [];
-            let total_commits_list = [];
-            for (let i = 0; i < cc.length; i++) {
-              added_lines_list.push(cc[i].data.added_lines);
-              deleted_lines_list.push(cc[i].data.deleted_lines);
-              modified_lines_list.push(cc[i].data.modified_lines);
-              total_commits_list.push(cc[i].data.total_commits);
-              dates.push(cc[i].timestamp);
-            }
-
+            const cc = sortByTimestamp(group.cc);
+            const dates = cc.map(e => e.timestamp);                 // already ascending
+            const added   = cc.map(e => e?.data?.added_lines);
+            const deleted = cc.map(e => e?.data?.deleted_lines);
+            const modified= cc.map(e => e.data.modified_lines);
+            const commits = cc.map(e => e?.data?.total_commits);
             transformed.CC = {
-              timestamp: dates.sort(),
-              data: {
-                added_lines: added_lines_list.reverse(),
-                deleted_lines: deleted_lines_list.reverse(),
-                modified_lines: modified_lines_list.reverse(),
-                total_commits: total_commits_list.reverse()
-              }
+              timestamp: dates,
+              data: { added, deleted, modified, commits }
             };
           }
 
           if (Array.isArray(group.ici) && group.ici.length) {
-            const ici = group.ici;
-            let dates = [];
-            let ici_score_list = [];
-            let repo_size_list = [];
-            for (let i = 0; i < ici.length; i++) {
-              ici_score_list.push(ici[i].data.ici_score);
-              repo_size_list.push(ici[i].data.repo_size_mb);
-              dates.push(ici[i].timestamp);
-            }
+            const ici = sortByTimestamp(group.ici);
+            const dates = ici.map(e => e.timestamp);                 // already ascending
+            const ici_score = ici.map(e => e?.data?.ici_score);
+            const repo_size = ici.map(e => e?.data?.repo_size_mb);
             transformed.ICI = {
-              timestamp: dates.sort(),
-              data: {
-                iCI_score: ici_score_list.reverse(),
-                repo_size_in_mB: repo_size_list.reverse()
-              }
+              timestamp: dates,
+              data: { iCI_score: ici_score, repo_size_in_mB: repo_size }
             };
           }
 
           if (Array.isArray(group.mttr) && group.mttr.length) {
-            const mttrArr = group.mttr;
-
-            const dates: number[] = [];
-            const mttrValues: number[] = [];
-
-            mttrArr.forEach(item => {
-              let value = 0.0;
-
-              if (
-                item.data &&
-                typeof item.data === 'object' &&
-                item.data.error === null &&
-                typeof item.data.mttr === 'number'
-              ) {
-                value = item.data.mttr;
-              }
-
-              dates.push(item.timestamp);
-              mttrValues.push(value);
-            });
-
+            const mttr = sortByTimestamp(group.mttr);
+            const dates = mttr.map(e => e.timestamp);
+            const mttr_time_in_hours = mttr.map(e => e?.data?.mttr);
             transformed.MTTR = {
-              timestamp: dates.sort(),
-              data: {
-                score: mttrValues.reverse()
-              }
+              timestamp: dates,
+              data: mttr_time_in_hours
             };
+            console.log('MTTR:', transformed.MTTR);
           }
 
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
 
-            const defects = group['defects-over-time'];
-            let dates = [];
-            let defect_closure_rate_list = [];
-            let defect_discovery_rate_list = [];
-            let open_issues_list = [];
-            let completed_issues_list = [];
-            let total_issues_list = [];
-            for (let i = 0; i < defects.length; i++) {
-              defect_closure_rate_list.push(defects[i].data.defect_closure_rate_last_30_days);
-              defect_discovery_rate_list.push(defects[i].data.defect_discovery_rate_last_30_days);
-              open_issues_list.push(defects[i].data.open_issues);
-              completed_issues_list.push(defects[i].data.completed_issues);
-              total_issues_list.push(defects[i].data.total_issues);
-              dates.push(defects[i].timestamp);
-            }
+            const defects = sortByTimestamp(group['defects-over-time']);
+            const dates = defects.map(e => e.timestamp);                 // already ascending
+            const defect_closure_rate = defects.map(e => e?.data?.defect_closure_rate_last_30_days);
+            const defect_discovery_rate = defects.map(e => e?.data?.defect_discovery_rate_last_30_days);
+            const open_issues = defects.map(e => e?.data?.open_issues);
+            const completed_issues = defects.map(e => e?.data?.completed_issues);
+            const total_issues = defects.map(e => e?.data?.total_issues);
             transformed.DefectsOverTime = {
-              timestamp: dates.sort(),
-              data: {
-                defect_closure_rate_30d: defect_closure_rate_list.reverse(),
-                defect_discovery_rate_30d: defect_discovery_rate_list.reverse(),
-                open_issues: open_issues_list.reverse(),
-                completed_issues: completed_issues_list.reverse(),
-                total_issues: total_issues_list.reverse()
-              }
+              timestamp: dates,
+              data: { defect_closure_rate_30d: defect_closure_rate, defect_discovery_rate_30d: defect_discovery_rate, open_issues, completed_issues, total_issues }
             };
           }
 
           if (Array.isArray(group.loc) && group.loc.length) {
-            const loc = group.loc;
-            let dates = [];
-            const extractedData = loc.map(item => item.data);
-
-            for (let i = 0; i < loc.length; i++) {
-              dates.push(loc[i].timestamp);
-            }
+            const locData = sortByTimestamp(group.loc);
+            const dates = locData.map(e => e.timestamp);
+            const extractedData = locData.map(e => e?.data);            // already ascending
             transformed.LOC = {
-              timestamp: dates.sort(),
-              data: extractedData.reverse()
+              timestamp: dates,
+              data: extractedData
             };
           }
 
           if (Array.isArray(group.hal) && group.hal.length) {
-            const halData = group.hal;
-            let keys = [];
-            let dates = [];
-            const sum = halData[0].data.find(e => e.Summary)?.Summary;
-            keys = Object.keys(sum);
-            let metrics = {};
-            console.log('Keys:', keys);
+            const halData = sortByTimestamp(group.hal);
+            const summaryKeys = Object.keys(
+              halData[0]?.data.find(e => e.Summary)?.Summary ?? {}
+            );
+            const metrics: Record<string, number[]> = Object.fromEntries(
+              summaryKeys.map(k => [k, []])
+            );
+            const dates: string[] = [];
+            halData.forEach(item => {
+            dates.push(item.timestamp);
 
-            for (let i = 0; i < halData.length; i++) {
-              dates.push(halData[i].timestamp);
-            }
-
-            for (let i = 0; i < keys.length; i++) {
-              const key = keys[i];
-              metrics[key] = [];
-            }
-
-            const entry = halData[0].data.find(e => e.Summary)?.Summary;
-            for (let i = 0; i < halData.length; i++) {
-              const entry = halData[i].data.find(e => e.Summary)?.Summary;
-              for (let j = 0; j < keys.length; j++) {
-                const key = keys[j];
-                metrics[key].push(entry[key]);
-              }
-            }
-            for (let i = 0; i < keys.length; i++) {
-              const key = keys[i];
-              metrics[key] = metrics[key].reverse();
-            }
+            const summary = item.data.find(e => e.Summary)?.Summary ?? {};
+              summaryKeys.forEach(k => metrics[k].push(summary[k] ?? null));
+            });
 
             transformed.Halstead = {
-              timestamp: dates.sort(),
+              timestamp: dates,
               data: {
-                difficulty: metrics['Total Difficulty'],
-                effort: metrics['Total Efforts'],
-                volume: metrics['Total Program Volume'],
-                vocabulary: metrics['Total Program Vocabulary'],
-                length: metrics['Total Program Length']
+                difficulty : metrics['Total Difficulty'],
+                effort     : metrics['Total Efforts'],
+                volume     : metrics['Total Program Volume'],
+                vocabulary : metrics['Total Program Vocabulary'],
+                length     : metrics['Total Program Length']
               }
             };
             console.log('Halstead:', transformed.Halstead);
           }
 
           if (Array.isArray(group['defects-stats']) && group['defects-stats'].length) {
-            const stats = group['defects-stats'];
+            const stats = sortByTimestamp(group['defects-stats']);
+            const dates = stats.map(e => e.timestamp);
+            const percentages = stats.map(e => e?.data[0]?.percentageBugsClosed);
 
-            const dates = [];
-            const percentages = [];
-
-            for (let i = 0; i < stats.length; i++) {
-              const entry = stats[i];
-              const dataBlock = Array.isArray(entry.data) ? entry.data[0] : null;
-
-              if (dataBlock && typeof dataBlock.percentageBugsClosed === 'number') {
-                percentages.push(dataBlock.percentageBugsClosed);
-                dates.push(entry.timestamp);
-              }
-            }
-
-            if (dates.length > 0 && percentages.length > 0) {
-              transformed.DefectsStats = {
-                timestamp: dates.sort(),
-                data: percentages.reverse()
-              };
-            }
+            transformed.DefectsStats = {
+              timestamp: dates,
+              data: percentages
+            };
           }
           if (Array.isArray(group.lcom4) && group.lcom4.length) {
-            const dates = [];
-            const scores = [];
+            const lcom4Data = sortByTimestamp(group.lcom4);
+            const dates = lcom4Data.map(e => e.timestamp);                 // already ascending
+            const lcom4_score = lcom4Data.map(e => e?.data[0]?.score);
 
-            group.lcom4.forEach(entry => {
-              const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
-              if (scoreObj && typeof scoreObj.score === 'number') {
-                dates.push(entry.timestamp);
-                scores.push(scoreObj.score);
-              }
-            });
-
-            if (dates.length) {
-              transformed.LCOM4 = {
-                timestamp: dates.sort(),
-                data: scores.reverse()
-              };
-            }
+            transformed.LCOM4 = {
+              timestamp: dates,
+              data: lcom4_score
+            };
           }
 
           if (Array.isArray(group.lcomhs) && group.lcomhs.length) {
-            const dates = [];
-            const scores = [];
+            const lcomhs = sortByTimestamp(group.lcomhs);
+            const dates = lcomhs.map(e => e.timestamp);                 // already ascending
+            const lcomhs_score = lcomhs.map(e => e?.data[0]?.score);
 
-            group.lcomhs.forEach(entry => {
-              const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
-              if (scoreObj && typeof scoreObj.score === 'number') {
-                dates.push(entry.timestamp);
-                scores.push(scoreObj.score);
-              }
-            });
-
-            if (dates.length) {
-              transformed.LCOMHS = {
-                timestamp: dates.sort(),
-                data: scores.reverse()
-              };
-            }
+            transformed.LCOMHS = {
+              timestamp: dates,
+              data: lcomhs_score
+            };
           }
 
           if (Array.isArray(group.fogindex) && group.fogindex.length) {
-            const fogArr = group.fogindex;
-
-            const dates = [];
-            const fogindexactual = []
-            const pctComplexWordsList = [];
-            const totalFilesList = [];
-            const avgSentenceLengthList = [];
-            const fogIndexVal = []
-
-            fogArr.forEach(item => {
-              const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
-
-              dates.push(item.timestamp);
-              fogindexactual.push(d.fogIndex);
-              pctComplexWordsList.push(d.percentageComplexWords);
-              totalFilesList.push(d.totalFiles);
-              avgSentenceLengthList.push(d.averageSentenceLength);
-              fogIndexVal.push(d.fogIndex);
-            });
-
+            const fogindex = sortByTimestamp(group.fogindex);
+            const dates = fogindex.map(e => e.timestamp);                 // already ascending
+            const fogindexactual = fogindex.map(e => e?.data[0]?.fogIndex);
+            const pctComplexWordsList = fogindex.map(e => e?.data[0]?.percentageComplexWords);
+            const totalFilesList = fogindex.map(e => e?.data[0]?.totalFiles);
+            const avgSentenceLengthList = fogindex.map(e => e?.data[0]?.averageSentenceLength);
             transformed.FogIndex = {
-              timestamp: dates.reverse(),
+              timestamp: dates,
               data: {
-                fog_index: fogindexactual.reverse(),
-                pct_complex_words: pctComplexWordsList.reverse(),
-                total_files: totalFilesList.reverse(),
-                avg_sentence_length: avgSentenceLengthList.reverse(),
-                fog_index: fogIndexVal.reverse()
+                fog_index: fogindexactual,
+                pct_complex_words: pctComplexWordsList,
+                total_files: totalFilesList,
+                avg_sentence_length: avgSentenceLengthList,
               }
             };
 
 
           }
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
-            const cD = group.cyclo;
-            let keys = [];
-            let dates = [];
-            let Metrics = {};
-
-            for (let i = 0; i < cD.length; i++) {
-              dates.push(cD[i].timestamp);
-            }
-
-            cD[0].data.forEach(entry => {
-              for (const [key, value] of Object.entries(entry)) {
-                if (typeof value === 'number') {
-                  keys.push(key);
-                }
-              }
-            })
-
-            for (let i = 0; i < keys.length; i++) {
-              const key = keys[i];
-              Metrics[key] = [];
-            }
-
-            for (let i = 0; i < cD.length; i++) {
-              const entry = cD[i].data;
-              for (let j = 0; j < entry.length; j++) {
-                const key = Object.keys(entry[j])[0];
-                if (Metrics[key]) {
-                  Metrics[key].push(entry[j][key]);
-                }
-              }
-            }
-
-            for (let i = 0; i < keys.length; i++) {
-              const key = keys[i];
-              Metrics[key] = Metrics[key].reverse();
-            }
+            const cycloData = sortByTimestamp(group.cyclo);
+            const dates = cycloData.map(e => e.timestamp);
+            const keys = Object.entries(cycloData[0].data[0])
+                     .filter(([, v]) => typeof v === 'number')
+                     .map(([k]) => k);
+            const metrics: Record<string, number[]> = Object.fromEntries(keys.map(k => [k, []]));
+            cycloData.forEach(item => {
+              item.data.forEach(obj => {
+                const [k, v] = Object.entries(obj)[0] as [string, number];
+                if (metrics[k] !== undefined) metrics[k].push(v);
+              });
+            });
             transformed.Cyclo = {
-              timestamp: dates.sort(),
-              data: Metrics
+              timestamp: dates,
+              data: metrics
             };
           }
         });

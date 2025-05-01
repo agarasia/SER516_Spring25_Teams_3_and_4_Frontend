@@ -30,9 +30,15 @@
           </div>
         </td>
         <td style="padding-left: 2em;">
+          <div class="flex items-center gap-2">
+            <label class="text-sm font-semibold datepicker">From</label>
+            <input type="date" v-model="rangeStart" :min="minDate" :max="maxDate" class="border rounded px-2 py-1 text-sm" />
+            <label class="text-sm font-semibold datepicker">To</label>
+            <input type="date" v-model="rangeEnd" :min="minDate" :max="maxDate" class="border rounded px-2 py-1 text-sm" />
+          </div>
           <p id="metrics-guide-overview" style="font-weight: 500;">
             The Metrics Dashboard provides an interactive visualization of key software quality metrics over time.<br>
-            <br>Toggle metrics from the sidebar to customize your view-select individual metrics or 
+            <br>Toggle metrics from the sidebar to customize your view-select individual metrics or
             use "All Metrics" to display everything at once.
             Each chart shows the trend of different quality indicators, helping you identify patterns, track
             improvements, and pinpoint areas that need attention.
@@ -46,7 +52,7 @@
             <div v-for="metric in displayedMetrics" :key="metric.value" class="chart-container">
               <h3 class="chart-heading">{{ metric.label }}</h3>
               <div class="chart-content">
-                <Line :data="getChartData(metric.value)" :options="chartOptions" />
+                <Line :data="getChartData2(metric.value)" :options="chartOptions" />
               </div>
             </div>
           </div>
@@ -84,6 +90,8 @@ export default {
     Line
   },
   setup(props) {
+    const rangeStart = ref(null);   // yyyy-mm-dd  (or null for “open”)
+    const rangeEnd = ref(null);
     const metric = [
       { value: 'CC', label: 'Code Churn', dataDict: true },
       { value: 'LOC', label: 'Lines of Code', dataDict: false },
@@ -197,17 +205,43 @@ export default {
       }
       return JSON.parse(JSON.stringify(data));
     }
+    const minDate = computed(() => {
+      let min = Infinity;
+      for (const m of availableMetrics.value) {
+        props.computedData[m.value].timestamp.forEach(ts => {
+          const t = new Date(ts).getTime();
+          if (t < min) min = t;
+        });
+      }
+      return isFinite(min) ? new Date(min).toISOString().slice(0, 10) : null;
+    });
 
+    const maxDate = computed(() => {
+      let max = -Infinity;
+      for (const m of availableMetrics.value) {
+        props.computedData[m.value].timestamp.forEach(ts => {
+          const t = new Date(ts).getTime();
+          if (t > max) max = t;
+        });
+      }
+      return isFinite(max) ? new Date(max).toISOString().slice(0, 10) : null;
+    });
     // Reactive/computed graph data
     const graphData = computed(() => getGraphData());
 
-    function getChartData(metricValue) {
-      const labels = graphLabels.value[metricValue];
-      const data = graphData.value[metricValue];
-      console.log('Graph Data:', data);
-      let datasets = [];
+    function getChartData2(metricValue) {
+      const allLabels = props.computedData[metricValue].timestamp;
+      const seriesNames = graphLabels.value[metricValue];   // line names
+      const seriesData = graphData.value[metricValue];     // values
 
-      // Predefined list of colors
+      const start = rangeStart.value ? new Date(rangeStart.value).getTime() : -Infinity;
+      const end = rangeEnd.value ? new Date(rangeEnd.value).getTime() : Infinity;
+      const keepIdx = allLabels
+        .map((ts, i) => ({ i, t: new Date(ts).getTime() }))
+        .filter(({ t }) => t >= start && t <= end)
+        .map(({ i }) => i);
+      const labels = keepIdx.map(i => allLabels[i]);
+      const xLabels = props.computedData[metricValue].timestamp; // matching dates
       const colors = [
         { borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 1)' }, // Teal
         { borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 1)' }, // Red
@@ -218,21 +252,15 @@ export default {
         { borderColor: 'rgba(0, 128, 0, 1)', backgroundColor: 'rgba(0, 128, 0, 1)' } // Green
       ];
 
-      for (let i = 0; i < labels.length; i++) {
-        const colorIndex = i % colors.length;
-        datasets.push({
-          label: labels[i],
-          data: data[i],
-          fill: false,
-          borderColor: colors[colorIndex].borderColor,
-          backgroundColor: colors[colorIndex].backgroundColor,
-          tension: 0.4
-        });
-      }
-      return {
-        labels: timestamps.value[0],
-        datasets: datasets
-      };
+      const datasets = seriesNames.map((name, sIdx) => ({
+        label: name,
+        data: keepIdx.map(i => seriesData[sIdx][i]),
+        fill: false,
+        ...colors[sIdx % colors.length],
+        tension: 0.4
+      }));
+
+      return { labels, datasets };
     }
 
     const chartOptions = {
@@ -264,10 +292,14 @@ export default {
       filterByMetric,
       graphLabels,
       graphData,
-      getChartData,
+      getChartData2,
       chartOptions,
       timestamps,
       Line,
+      rangeStart,
+      rangeEnd,
+      minDate,
+      maxDate
     };
   }
 };
@@ -528,5 +560,11 @@ export default {
   height: 10px;
   border-radius: 50%;
   display: inline-block;
+}
+
+
+
+.datepicker {
+  padding: 20px;
 }
 </style>
