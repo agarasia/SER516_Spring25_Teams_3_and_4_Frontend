@@ -1,39 +1,45 @@
 <template>
-  <header v-if="!showOutput">
+  <!-- <header v-if="!showOutput">
     <h1>Software Quality Metric Calculator</h1>
-  </header>
+  </header> -->
   <main>
     <!-- Show Input Form if OutputView or BenchmarkDialog is Hidden -->
     <div v-if="!showOutput && !showBenchmarkDialog">
       <div class="input-container1">
-        <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If we do not have any data for the entered repository URL, then it may take some time to compute and assess historical data.</p>
+        <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If
+          we do not have any data for the entered repository URL, then it may take some time to compute and assess
+          historical data.</p>
         <label for="github-url">Enter GitHub Repository URL:</label>
-        <input
-          type="text"
-          id="github-url"
-          v-model="githubUrl"
-          placeholder="https://github.com/user/repository"
-          @keyup.enter="checkGitHubRepoExists"
-        />
+        <input type="text" id="github-url" v-model="githubUrl" placeholder="https://github.com/user/repository"
+          @keyup.enter="checkGitHubRepoExists" />
         <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
         <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
           {{ errorMessages.githubUrl }}
         </p>
+        <div class="metric-selection">
+          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+          <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+            Code</label>
+          <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
+              @change="handleMetricChange" /> Defects Over Time</label>
+          <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+            ICI</label>
+        </div>
       </div>
+
+
 
       <br />
       <br />
       <!-- <div class="container-wrapper">
-        <div class="input-container2" v-if="isValidRepo">
-          <label>All metrics will be calculated automatically.</label>
-        </div>
+      <div class="input-container2" v-if="isValidRepo">
+        <label>All metrics will be calculated automatically.</label>
       </div>
-      <br />
-      <br /> -->
-      <button
-        @click="submitData"
-        :disabled="!isValidRepo"
-      >
+
+    </div>
+    <br />
+    <br /> -->
+      <button @click="submitData" :disabled="!isValidRepo">
         {{ buttonText }}
       </button>
       <h4 class="loading-text" v-if="isLoading">
@@ -52,25 +58,24 @@
         <br />
         <div class="benchmark-container">
           <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
-              <div class="label-input-container">
-                <label :for="`benchmark-${metric.value}`">
-                  {{ metric.label }} Benchmark:
-                </label>
-                <input
-                  type="number"
-                  :id="`benchmark-${metric.value}`"
-                  v-model.number="benchmarkInputs[metric.benchmarkKey]"
-                  :placeholder="`Enter ${metric.label} benchmark`"
-                />
-              </div>
+            <div class="label-input-container">
+              <label :for="`benchmark-${metric.value}`">
+                {{ metric.label }} Benchmark:
+              </label>
+              <input type="number" :id="`benchmark-${metric.value}`"
+                v-model.number="benchmarkInputs[metric.benchmarkKey]"
+                :placeholder="`Enter ${metric.label} benchmark`" />
             </div>
           </div>
         </div>
-
-        <div class="button-container">
-          <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
-        </div>
       </div>
+
+      <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
+      </div>
+      <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
+        v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
+    </div>
 
     <!-- Show Output Screen After Validation -->
     <OutputView
@@ -106,6 +111,7 @@ export default {
   components: { TagInput, OutputView, LoadingSpinner },
   setup() {
     const githubUrl = ref('');
+    const selectedMetrics = ref([]);
     const errorMessages = reactive({ githubUrl: '' });
     const showOutput = ref(false);
     const isValidRepo = ref(false);
@@ -120,43 +126,6 @@ export default {
     const buttonText = ref('Calculate');
     const isLoading = ref(false);
 
-    const availableMetrics = [
-      {
-        value: 'LCOM4',
-        label: 'LCOM4',
-        benchmarkKey: 'lcom4_benchmark',
-      },
-      {
-        value: 'LCOMHS',
-        label: 'LCOMHS',
-        benchmarkKey: 'lcomhs_benchmark',
-      },
-      {
-        value: 'DefectScore',
-        label: 'Defect Score',
-        benchmarkKey: 'defect_score_benchmark',
-      },
-      {
-        value: 'AfferentCoupling',
-        label: 'Afferent Coupling',
-        benchmarkKey: 'afferent_coupling_benchmark',
-      },
-      {
-        value: 'EfferentCoupling',
-        label: 'Efferent Coupling',
-        benchmarkKey: 'efferent_coupling_benchmark',
-      },
-      {
-        value: 'DefectDensityAnalysis',
-        label: 'Defect Density Analysis',
-        benchmarkKey: 'defect_density_analysis_benchmark',
-      },
-      {
-        value: 'Instability',
-        label: 'Instability',
-        benchmarkKey: 'instability_benchmark',
-      },
-    ];
 
     const isValidGitHubUrl = (url) => {
       const regex = /^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/;
@@ -200,23 +169,23 @@ export default {
         errorMessages.githubUrl = 'Valid GitHub Repository.';
         // Finally, add repo to shared volume.
         const req = githubUrl.value.toLowerCase();
-        const res = await axios.post(
-          'http://localhost:8080/add_repo',
-          { repo_url: req },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              mode: 'cors',
-            },
-          }
-        );
-        console.log('Response from backend:', res.data);
-        if (res.status === 200) {
-          console.log('Repository added successfully.');
-        } else {
-          console.error('Failed to add repository.');
-        }
+        // const res = await axios.post(
+        //   'http://localhost:8080/add_repo',
+        //   { repo_url: req },
+        //   {
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //       'Access-Control-Allow-Origin': '*',
+        //       mode: 'cors',
+        //     },
+        //   }
+        // );
+        // console.log('Response from backend:', res.data);
+        // if (res.status === 200) {
+        //   console.log('Repository added successfully.');
+        // } else {
+        //   console.error('Failed to add repository.');
+        // }
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
@@ -232,7 +201,7 @@ export default {
 
       try {
         await calculateMetrics();
-        showBenchmarkDialog.value = true;
+        // showBenchmarkDialog.value = true;
       } catch (e) {
         console.error(e);
       } finally {
@@ -242,17 +211,177 @@ export default {
     };
 
     const calculateMetrics = async () => {
+
       try {
-        const metrics = "cc,cyclo,hal";
-        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
-        const response = await axios.get(req);
-        console.log('Response from backend:', response.data);
-        return true;
+        const metrics = selectedMetrics.value;
+        const req = `http://localhost:8080/get_metrics?repo_url=https://github.com/aapati17/testjavaproject&metrics=${metrics}`.toLowerCase();
+        const { data } = await axios.get(req);
+        console.log('Response from backend:', data);
+        const transformed = {};
+        (data.metrics_data ?? []).forEach(group => {
+          if (Array.isArray(group.cc) && group.cc.length) {
+            const cc = group.cc;
+            let dates = [];
+            let added_lines_list = [];
+            let deleted_lines_list = [];
+            let modified_lines_list = [];
+            let total_commits_list = [];
+            for (let i = 0; i < cc.length; i++) {
+              added_lines_list.push(cc[i].data.added_lines);
+              deleted_lines_list.push(cc[i].data.deleted_lines);
+              modified_lines_list.push(cc[i].data.modified_lines);
+              total_commits_list.push(cc[i].data.total_commits);
+              dates.push(cc[i].timestamp);
+            }
+
+            transformed.CC = {
+              timestamp: dates.reverse(),
+              data: {
+                added_lines: added_lines_list.reverse(),
+                deleted_lines: deleted_lines_list.reverse(),
+                modified_lines: modified_lines_list.reverse(),
+                total_commits: total_commits_list.reverse()
+              }
+            };
+          }
+
+          if (Array.isArray(group.ici) && group.ici.length) {
+            const ici = group.ici;
+            let dates = [];
+            let ici_score_list = [];
+            let repo_size_list = [];
+            for (let i = 0; i < ici.length; i++) {
+              ici_score_list.push(ici[i].data.ici_score);
+              repo_size_list.push(ici[i].data.repo_size_mb);
+              dates.push(ici[i].timestamp);
+            }
+            transformed.ICI = {
+              timestamp: dates.reverse(),
+              data: {
+                iCI_score: ici_score_list.reverse(),
+                repo_size_in_mB: repo_size_list.reverse()
+              }
+            };
+          }
+
+          if (Array.isArray(group.mttr) && group.mttr.length) {
+            const mttr = group.mttr[0];
+
+            if (mttr.data
+              && typeof mttr.data === 'object'
+              && mttr.data.error === null
+              && typeof mttr.data.mttr === 'number') {
+              transformed.MTTR = {
+                timestamp: mttr.timestamp ?? Date.now(),
+                data: mttr.data.mttr
+              }
+            }
+            else {
+              transformed.MTTR = {
+                timestamp: mttr.timestamp ?? Date.now(),
+                data: 0.0
+              };
+            }
+          }
+
+          if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
+
+            const defects = group['defects-over-time'];
+            let dates = [];
+            let defect_closure_rate_list = [];
+            let defect_discovery_rate_list = [];
+            let open_issues_list = [];
+            let completed_issues_list = [];
+            let total_issues_list = [];
+            for (let i = 0; i < defects.length; i++) {
+              defect_closure_rate_list.push(defects[i].data.defect_closure_rate_last_30_days);
+              defect_discovery_rate_list.push(defects[i].data.defect_discovery_rate_last_30_days);
+              open_issues_list.push(defects[i].data.open_issues);
+              completed_issues_list.push(defects[i].data.completed_issues);
+              total_issues_list.push(defects[i].data.total_issues);
+              dates.push(defects[i].timestamp);
+            }
+            transformed.DefectsOverTime = {
+              timestamp: dates.reverse(),
+              data: {
+                defect_closure_rate_30d: defect_closure_rate_list.reverse(),
+                defect_discovery_rate_30d: defect_discovery_rate_list.reverse(),
+                open_issues: open_issues_list.reverse(),
+                completed_issues: completed_issues_list.reverse(),
+                total_issues: total_issues_list.reverse()
+              }
+            };
+          }
+
+          if (Array.isArray(group.loc) && group.loc.length) {
+            const loc = group.loc;
+            let dates = [];
+            const extractedData = loc.map(item => item.data);
+
+            for (let i = 0; i < loc.length; i++) {
+              dates.push(loc[i].timestamp);
+            }
+            transformed.LOC = {
+              timestamp: dates.reverse(),
+              data: extractedData.reverse()
+            };
+          }
+
+          if (Array.isArray(group.hal) && group.hal.length) {
+            const hal = group.hal[0];
+            let metrics = {};
+            if (Array.isArray(hal.data)) {
+              const summary = hal.data.find(e => e.Summary)?.Summary;
+              const firstFile = hal.data.find(e => e.metrics)?.metrics;
+              metrics = summary ?? firstFile ?? {};
+            }
+            transformed.Halstead = {
+              timestamp: hal.timestamp ?? Date.now(),
+              data: {
+                difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
+                effort: metrics['Total Efforts'] ?? metrics.Effort,
+                //volume: metrics['Total Program Volume'] ?? metrics['Program Volume'],
+                //vocabulary: metrics['Total Program Vocabulary'] ?? metrics['Program Vocabulary'],
+                //length: metrics['Total Program Length'] ?? metrics['Program Length']
+              }
+            };
+          }
+
+          if (Array.isArray(group.cyclo) && group.cyclo.length) {
+            const cyclo = group.cyclo[0];
+            let metrics = {};
+
+            if (Array.isArray(cyclo.data)) {
+              cyclo.data.forEach(entry => {
+                for (const [key, value] of Object.entries(entry)) {
+                  if (typeof value === 'number') {
+                    metrics[key] = value;
+                  }
+                }
+              });
+            }
+            transformed.Cyclo = {
+              timestamp: cyclo.timestamp ?? Date.now(),
+              data: {
+                total_cyclomatic_complexity: metrics['total cyclomatic complexity']
+                //max_cyclomatic: metrics['max cyclomatic complexity'],
+                //functions_evaluated: metrics['functions evaluated']
+                //average_cyclomatic: metrics['average cyclomatic complexity'],
+
+              }
+            };
+
+          }
+        });
+        computedData.value = transformed;
+        showBenchmarkDialog.value = true;
       } catch (error) {
         console.error('Error sending data to backend:', error);
         return false;
       }
     };
+
+
 
     const handleBenchmarkSubmit = async () => {
       showBenchmarkDialog.value = false; // close the dialog
@@ -308,7 +437,6 @@ export default {
       showFormAgain,
       checkGitHubRepoExists,
       isValidRepo,
-      availableMetrics,
       computedData,
       benchmarks,
       tagsData,
@@ -319,6 +447,7 @@ export default {
       benchmarkInputs,
       handleBenchmarkSubmit,
       showBenchmarkLines,
+      selectedMetrics,
     };
   },
 };
