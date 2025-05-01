@@ -30,10 +30,9 @@
         </td>
         <td style="padding-left: 2em;">
           <p id="metrics-guide-overview" style="font-weight: 500;">
-            The Metrics Dashboard provides an interactive visualization of key software quality metrics over time. Use
-            the date range selector above to filter data and focus on specific time periods.<br><br>Toggle metrics from
-            the
-            sidebar to customize your view-select individual metrics or use "Select All" to display everything at once.
+            The Metrics Dashboard provides an interactive visualization of key software quality metrics over time.<br>
+            <br>Toggle metrics from the sidebar to customize your view-select individual metrics or 
+            use "All Metrics" to display everything at once.
             Each chart shows the trend of different quality indicators, helping you identify patterns, track
             improvements, and pinpoint areas that need attention.
             <br><br>This data-driven approach enables teams to make
