@@ -17,13 +17,36 @@
           {{ errorMessages.githubUrl }}
         </p>
         <div class="metric-selection">
-          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
-          <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
-            Code</label>
-          <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
-              @change="handleMetricChange" /> Defects Over Time</label>
-          <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
-            ICI</label>
+            <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+            <label>
+                <input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+                Cyclomatic Complexity
+            </label>
+            <label>
+                <input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
+                Halstead
+            </label>
+            <label>
+                <input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+                Code
+            </label>
+            <label>
+                <input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
+                       @change="handleMetricChange" /> Defects Over Time
+            </label>
+            <label>
+                <input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
+                MTTR
+            </label>
+            <label>
+                <input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+                ICI
+            </label>
+            <label>
+                <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
+                Defects Stats
+            </label>
+
         </div>
       </div>
 
@@ -154,23 +177,23 @@ export default {
         errorMessages.githubUrl = 'Valid GitHub Repository.';
         // Finally, add repo to shared volume.
         const req = githubUrl.value.toLowerCase();
-        // const res = await axios.post(
-        //   'http://localhost:8080/add_repo',
-        //   { repo_url: req },
-        //   {
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //       'Access-Control-Allow-Origin': '*',
-        //       mode: 'cors',
-        //     },
-        //   }
-        // );
-        // console.log('Response from backend:', res.data);
-        // if (res.status === 200) {
-        //   console.log('Repository added successfully.');
-        // } else {
-        //   console.error('Failed to add repository.');
-        // }
+         const res = await axios.post(
+           'http://localhost:8080/add_repo',
+           { repo_url: req },
+           {
+             headers: {
+               'Content-Type': 'application/json',
+               'Access-Control-Allow-Origin': '*',
+               mode: 'cors',
+             },
+           }
+         );
+         console.log('Response from backend:', res.data);
+         if (res.status === 200) {
+           console.log('Repository added successfully.');
+         } else {
+           console.error('Failed to add repository.');
+         }
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
@@ -196,12 +219,14 @@ export default {
 
       try {
         const metrics = selectedMetrics.value;
-        const req = `http://localhost:8080/get_metrics?repo_url=https://github.com/aapati17/testjavaproject&metrics=${metrics}`.toLowerCase();
+        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
+
         const { data } = await axios.get(req);
         console.log('Response from backend:', data);
         const transformed = {};
         (data.metrics_data ?? []).forEach(group => {
-          if (Array.isArray(group.cc) && group.cc.length) {
+            if (Array.isArray(group.cc) && group.cc.length) {
+                
             const cc = group.cc;
             let dates = [];
             let added_lines_list = [];
@@ -246,25 +271,34 @@ export default {
             };
           }
 
-          if (Array.isArray(group.mttr) && group.mttr.length) {
-            const mttr = group.mttr[0];
+            if (Array.isArray(group.mttr) && group.mttr.length) {
+                const mttrArr = group.mttr;
 
-            if (mttr.data
-              && typeof mttr.data === 'object'
-              && mttr.data.error === null
-              && typeof mttr.data.mttr === 'number') {
-              transformed.MTTR = {
-                timestamp: mttr.timestamp ?? Date.now(),
-                data: mttr.data.mttr
-              }
+                const dates: number[] = [];
+                const mttrValues: number[] = [];
+
+                mttrArr.forEach(item => {
+                    let value = 0.0;
+
+                    if (
+                        item.data &&
+                        typeof item.data === 'object' &&
+                        item.data.error === null &&
+                        typeof item.data.mttr === 'number'
+                    ) {
+                        value = item.data.mttr;                                     
+                    }
+
+                    dates.push(item.timestamp);                                   
+                    mttrValues.push(value);                                        
+                });
+
+                transformed.MTTR = {
+                    timestamp: dates.reverse(),    // newest first
+                    data: mttrValues.reverse()
+                };
             }
-            else {
-              transformed.MTTR = {
-                timestamp: mttr.timestamp ?? Date.now(),
-                data: 0.0
-              };
-            }
-          }
+
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
 
@@ -309,50 +343,76 @@ export default {
             };
           }
 
-          if (Array.isArray(group.hal) && group.hal.length) {
-            const hal = group.hal[0];
-            let metrics = {};
-            if (Array.isArray(hal.data)) {
-              const summary = hal.data.find(e => e.Summary)?.Summary;
-              const firstFile = hal.data.find(e => e.metrics)?.metrics;
-              metrics = summary ?? firstFile ?? {};
+      
+            if (Array.isArray(group.hal) && group.hal.length) {
+                const hal = group.hal;
+
+                const dates = [];
+                const difficultyList= [];
+                const effortList = [];
+
+                hal.forEach(item => {
+                    let metrics: Record<string, any> = {};
+
+                    if (Array.isArray(item.data)) {
+                        const summary = item.data.find(e => e.Summary)?.Summary;
+                        const firstFile = item.data.find(e => e.metrics)?.metrics;
+                        metrics = summary ?? firstFile ?? {};
+                    }
+
+                    dates.push(item.timestamp);        
+                    difficultyList.push(                                           
+                        metrics['Total Difficulty'] ?? metrics.Difficulty
+                    );
+                    effortList.push(                                               
+                        metrics['Total Efforts'] ?? metrics.Effort
+                    );
+                });
+
+                transformed.Halstead = {
+                    timestamp: dates.reverse(),         
+                    data: {
+                        difficulty: difficultyList.reverse(),
+                        effort: effortList.reverse(),
+
+                    }
+                };
             }
-            transformed.Halstead = {
-              timestamp: hal.timestamp ?? Date.now(),
-              data: {
-                difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
-                effort: metrics['Total Efforts'] ?? metrics.Effort,
-                //volume: metrics['Total Program Volume'] ?? metrics['Program Volume'],
-                //vocabulary: metrics['Total Program Vocabulary'] ?? metrics['Program Vocabulary'],
-                //length: metrics['Total Program Length'] ?? metrics['Program Length']
-              }
-            };
-          }
+
 
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
-            const cyclo = group.cyclo[0];
-            let metrics = {};
+            const cyclo = group.cyclo;
+              let metrics = {};
 
-            if (Array.isArray(cyclo.data)) {
-              cyclo.data.forEach(entry => {
-                for (const [key, value] of Object.entries(entry)) {
-                  if (typeof value === 'number') {
-                    metrics[key] = value;
+            const dates  = [];
+            const totalCyclomaticList = [];
+
+              cyclo.forEach(item => {
+                  let metrics: Record<string, any> = {};
+
+                  if (Array.isArray(item.data)) {
+                      item.data.forEach(entry => {
+                          for (const [key, value] of Object.entries(entry)) {
+                              if (typeof value === 'number') {
+                                  metrics[key] = value;
+                              }
+                          }
+                      });
                   }
-                }
+
+                  dates.push(item.timestamp);                                 
+                  totalCyclomaticList.push(                                   
+                      metrics['total cyclomatic complexity']
+                  );
               });
-            }
-            transformed.Cyclo = {
-              timestamp: cyclo.timestamp ?? Date.now(),
-              data: {
-                total_cyclomatic_complexity: metrics['total cyclomatic complexity']
-                //max_cyclomatic: metrics['max cyclomatic complexity'],
-                //functions_evaluated: metrics['functions evaluated']
-                //average_cyclomatic: metrics['average cyclomatic complexity'],
 
-              }
-            };
+              transformed.Cyclo = {
+                  timestamp: dates.reverse(),
+                  data: {
+                      total_cyclomatic_complexity: totalCyclomaticList.reverse(),
 
+                  }
+              };
           }
         });
         computedData.value = transformed;
