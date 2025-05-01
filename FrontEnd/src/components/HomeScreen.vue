@@ -115,11 +115,11 @@ import TagInput from './TagInput.vue';
 import OutputView from './OutputView.vue';
 import LoadingSpinner from './LoadingSpinner.vue';
 
-
 export default {
   name: 'HomeScreen',
   components: { TagInput, OutputView, LoadingSpinner },
   setup() {
+    const token = import.meta.env.VITE_GITHUB_TOKEN;
     const githubUrl = ref('');
     const selectedMetrics = ref([]);
     const errorMessages = reactive({ githubUrl: '' });
@@ -159,24 +159,30 @@ export default {
       }
 
       const repoPath = githubUrl.value.replace('https://github.com/', '');
-      const apiUrl = `https://api.github.com/repos/${repoPath}/languages`;
 
       try {
-        // const response = await fetch(apiUrl);
-        // if (!response.ok) {
-        //   errorMessages.githubUrl = 'GitHub repository does not exist.';
-        //   isLoading.value = false;
-        //   return;
-        // }
-        // const files = await response.json();
-        // const keys = Object.keys(files);
-        // if (!keys.includes('Java')) {
-        //   errorMessages.githubUrl =
-        //     'The repository does not have a Java project.';
-        //   isLoading.value = false;
-        //   return;
-        // }
-        // errorMessages.githubUrl = 'Valid GitHub Repository.';
+        const response = await axios.get(
+          `https://api.github.com/repos/${repoPath}/languages`,
+          {
+            headers: {
+              Authorization: `token ${token}`,
+            },
+          }
+        );
+        if (response.status !== 200) {
+          errorMessages.githubUrl = 'GitHub repository does not exist.';
+          isLoading.value = false;
+          return;
+        }
+        const files = response.data;
+        const keys = Object.keys(files);
+        if (!keys.includes('Java')) {
+          errorMessages.githubUrl =
+            'The repository does not have a Java project.';
+          isLoading.value = false;
+          return;
+        }
+        errorMessages.githubUrl = 'Valid GitHub Repository.';
 
         const req = githubUrl.value;
         const res = await axios.post(
@@ -198,6 +204,7 @@ export default {
         }
         isValidRepo.value = true;
       } catch (error) {
+        console.error('Error checking GitHub repository:', error);
         errorMessages.githubUrl = 'Error connecting to GitHub.';
         isLoading.value = false;
         return;

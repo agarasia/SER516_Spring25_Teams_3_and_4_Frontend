@@ -12,57 +12,7 @@ env:
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
-  publish-services:
-    environment: dockerhub
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service:
-          - cc
-          - cyclo
-          - defects-over-time
-          - hal
-          - ici
-          - loc
-          - mttr
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
-
-      - name: Set release version
-        id: vars
-        run: echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Build and tag Docker image
-        run: |
-          SERVICE=${{ matrix.service }}
-          IMAGE_NAME=${DOCKERHUB_USERNAME}/ser516-${SERVICE}:${RELEASE_TAG}
-          docker build \
-            --build-arg SERVICE_NAME=${SERVICE} \
-            -t "$IMAGE_NAME" \
-            -f DockerfileServices \
-            .
-
-      - name: Push Docker image
-        run: |
-          SERVICE=${{ matrix.service }}
-          IMAGE_NAME=${DOCKERHUB_USERNAME}/ser516-${SERVICE}:${RELEASE_TAG}
-          docker push "$IMAGE_NAME"
-
-      - name: Tag and push latest
-        run: |
-          SERVICE=${{ matrix.service }}
-          VERSIONED_IMAGE=${DOCKERHUB_USERNAME}/ser516-${SERVICE}:${RELEASE_TAG}
-          LATEST_IMAGE=${DOCKERHUB_USERNAME}/ser516-${SERVICE}:latest
-          docker tag "$VERSIONED_IMAGE" "$LATEST_IMAGE"
-          docker push "$LATEST_IMAGE"
-
-  publish-middleware:
+  publish-frontend:
     environment: dockerhub
     runs-on: ubuntu-latest
     steps:
@@ -79,20 +29,21 @@ jobs:
 
       - name: Build and tag Docker image
         run: |
-          IMAGE_NAME=${DOCKERHUB_USERNAME}/ser516-middleware:${RELEASE_TAG}
+          cd FrontEnd
+          IMAGE_NAME=${DOCKERHUB_USERNAME}/app-frontend:${RELEASE_TAG}
           docker build \
             -t "$IMAGE_NAME" \
-            -f DockerfileMiddleware \
+            -f dockerfile \
             .
 
       - name: Push Docker image
         run: |
-          IMAGE_NAME=${DOCKERHUB_USERNAME}/ser516-middleware:${RELEASE_TAG}
+          IMAGE_NAME=${DOCKERHUB_USERNAME}/app-frontend:${RELEASE_TAG}
           docker push "$IMAGE_NAME"
 
       - name: Tag and push latest
         run: |
-          VERSIONED_IMAGE=${DOCKERHUB_USERNAME}/ser516-middleware:${RELEASE_TAG}
-          LATEST_IMAGE=${DOCKERHUB_USERNAME}/ser516-middleware:latest
+          VERSIONED_IMAGE=${DOCKERHUB_USERNAME}/app-frontend:${RELEASE_TAG}
+          LATEST_IMAGE=${DOCKERHUB_USERNAME}/app-frontend:latest
           docker tag "$VERSIONED_IMAGE" "$LATEST_IMAGE"
           docker push "$LATEST_IMAGE"
