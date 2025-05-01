@@ -1,15 +1,16 @@
 <template>
   <div class="metrics-guide-container">
-    <button class="back-button" @click="$emit('goBack')">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round" class="arrow-icon">
-        <line x1="20" y1="12" x2="4" y2="12"></line>
-        <polyline points="10 18 4 12 10 6"></polyline>
-      </svg>
-      Back
-    </button>
+
     <!-- Metrics Content -->
     <div class="metrics-guide-box-1">
+      <button class="back-button" @click="$emit('goBack')">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="arrow-icon">
+          <line x1="20" y1="12" x2="4" y2="12"></line>
+          <polyline points="10 18 4 12 10 6"></polyline>
+        </svg>
+        Back
+      </button>
       <p class="metrics-guide-heading">Results</p>
       <hr style="width: 3.8%; margin-left: 1.45em; height: 2px; background-color: #4A6C8B;">
       <table style="width: 100%; margin-top: 0em; margin-left:-1em">
@@ -92,7 +93,7 @@ export default {
       { value: 'DefectsOverTime', label: 'Defects Over Time', dataDict: true },
       { value: 'Cyclo', label: 'Cyclomatic Complexity', dataDict: true },
       { value: 'Halstead', label: 'Halstead Complexity', dataDict: true },
-      { value: 'DefectsStats', label: 'Defects Stats', dataDict: false }, 
+      { value: 'DefectsStats', label: 'Defects Stats', dataDict: false },
       { value: 'FogIndex', label: 'Fog Index', dataDict: true },
       { value: 'LCOM4', label: 'LCOM4 Scores', dataDict: false },
       { value: 'LCOMHS', label: 'LCOMHS Scores', dataDict: false }

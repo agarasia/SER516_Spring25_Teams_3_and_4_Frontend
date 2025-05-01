@@ -17,14 +17,6 @@
       <MetricsGuide v-else-if="currentTab === 'metrics'" />
     </main>
   </div>
-
-  <!-- Footer Section -->
-  <footer class="footer" v-if="!showOutput">
-    <p>&copy; 2025 Metric Calculator. All rights reserved.</p>
-    <p>
-      Developed by: SER516 Class (Spring 2025)
-    </p>
-  </footer>
 </template>
 
 <script lang="ts">
@@ -43,19 +35,19 @@ export default defineComponent({
     MetricsGuide,
   },
   setup() {
-  const currentTab = ref('landing'); // Start from landing page
-  const homeKey = ref(0);
+    const currentTab = ref('landing'); // Start from landing page
+    const homeKey = ref(0);
 
-  const switchTab = (tab: string) => {
-    // If switching away from Home, reset HomeScreen
-    if (tab !== 'calculate') {
-      homeKey.value++;
-    }
-    currentTab.value = tab;
-  };
+    const switchTab = (tab: string) => {
+      // If switching away from Home, reset HomeScreen
+      if (tab !== 'calculate') {
+        homeKey.value++;
+      }
+      currentTab.value = tab;
+    };
 
-  return { currentTab, homeKey, switchTab };
-}
+    return { currentTab, homeKey, switchTab };
+  }
 });
 </script>
 
@@ -70,6 +62,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
 }
+
 html,
 body {
   height: 100%;
@@ -77,12 +70,14 @@ body {
 }
 
 .navbar {
-  background-color: #2c3e50; /* keep your original dark blue */
+  background-color: #2c3e50;
+  /* keep your original dark blue */
   padding: 15px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: 'Avenir', Helvetica, Arial, sans-serif; /* make navbar consistent font */
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  /* make navbar consistent font */
 }
 
 .brand {
@@ -100,7 +95,8 @@ body {
   background: none;
   border: none;
   color: white;
-  font-family: 'Avenir', Helvetica, Arial, sans-serif; /* ensure same font */
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  /* ensure same font */
   font-size: 18px;
   font-weight: 500;
   cursor: pointer;
@@ -139,7 +135,8 @@ footer {
 
 /* Main grows/shrinks and scrolls if necessary */
 main {
-  flex: 1 0 auto;           /* fills the leftover space */
+  flex: 1 0 auto;
+  /* fills the leftover space */
   overflow-y: auto;
 }
 </style>
