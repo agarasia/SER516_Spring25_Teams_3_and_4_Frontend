@@ -334,50 +334,76 @@ export default {
             };
           }
 
-          if (Array.isArray(group.hal) && group.hal.length) {
-            const hal = group.hal[0];
-            let metrics = {};
-            if (Array.isArray(hal.data)) {
-              const summary = hal.data.find(e => e.Summary)?.Summary;
-              const firstFile = hal.data.find(e => e.metrics)?.metrics;
-              metrics = summary ?? firstFile ?? {};
+      
+            if (Array.isArray(group.hal) && group.hal.length) {
+                const hal = group.hal;
+
+                const dates = [];
+                const difficultyList= [];
+                const effortList = [];
+
+                hal.forEach(item => {
+                    let metrics: Record<string, any> = {};
+
+                    if (Array.isArray(item.data)) {
+                        const summary = item.data.find(e => e.Summary)?.Summary;
+                        const firstFile = item.data.find(e => e.metrics)?.metrics;
+                        metrics = summary ?? firstFile ?? {};
+                    }
+
+                    dates.push(item.timestamp);        
+                    difficultyList.push(                                           
+                        metrics['Total Difficulty'] ?? metrics.Difficulty
+                    );
+                    effortList.push(                                               
+                        metrics['Total Efforts'] ?? metrics.Effort
+                    );
+                });
+
+                transformed.Halstead = {
+                    timestamp: dates.reverse(),         
+                    data: {
+                        difficulty: difficultyList.reverse(),
+                        effort: effortList.reverse(),
+
+                    }
+                };
             }
-            transformed.Halstead = {
-              timestamp: hal.timestamp ?? Date.now(),
-              data: {
-                difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
-                effort: metrics['Total Efforts'] ?? metrics.Effort,
-                //volume: metrics['Total Program Volume'] ?? metrics['Program Volume'],
-                //vocabulary: metrics['Total Program Vocabulary'] ?? metrics['Program Vocabulary'],
-                //length: metrics['Total Program Length'] ?? metrics['Program Length']
-              }
-            };
-          }
+
 
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
-            const cyclo = group.cyclo[0];
-            let metrics = {};
+            const cyclo = group.cyclo;
+              let metrics = {};
 
-            if (Array.isArray(cyclo.data)) {
-              cyclo.data.forEach(entry => {
-                for (const [key, value] of Object.entries(entry)) {
-                  if (typeof value === 'number') {
-                    metrics[key] = value;
+            const dates  = [];
+            const totalCyclomaticList = [];
+
+              cyclo.forEach(item => {
+                  let metrics: Record<string, any> = {};
+
+                  if (Array.isArray(item.data)) {
+                      item.data.forEach(entry => {
+                          for (const [key, value] of Object.entries(entry)) {
+                              if (typeof value === 'number') {
+                                  metrics[key] = value;
+                              }
+                          }
+                      });
                   }
-                }
+
+                  dates.push(item.timestamp);                                 
+                  totalCyclomaticList.push(                                   
+                      metrics['total cyclomatic complexity']
+                  );
               });
-            }
-            transformed.Cyclo = {
-              timestamp: cyclo.timestamp ?? Date.now(),
-              data: {
-                total_cyclomatic_complexity: metrics['total cyclomatic complexity']
-                //max_cyclomatic: metrics['max cyclomatic complexity'],
-                //functions_evaluated: metrics['functions evaluated']
-                //average_cyclomatic: metrics['average cyclomatic complexity'],
 
-              }
-            };
+              transformed.Cyclo = {
+                  timestamp: dates.reverse(),
+                  data: {
+                      total_cyclomatic_complexity: totalCyclomaticList.reverse(),
 
+                  }
+              };
           }
         });
         computedData.value = transformed;
