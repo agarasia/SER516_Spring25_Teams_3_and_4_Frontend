@@ -1,206 +1,186 @@
 <template>
-  <header v-if="!showOutput">
-      <h1>Metric Calculator</h1>
-    </header>
+  <!-- <header v-if="!showOutput">
+    <h1>Software Quality Metric Calculator</h1>
+  </header> -->
   <main>
-    
     <!-- Show Input Form if OutputView or BenchmarkDialog is Hidden -->
     <div v-if="!showOutput && !showBenchmarkDialog">
       <div class="input-container1">
+        <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If
+          we do not have any data for the entered repository URL, then it may take some time to compute and assess
+          historical data.</p>
         <label for="github-url">Enter GitHub Repository URL:</label>
         <input type="text" id="github-url" v-model="githubUrl" placeholder="https://github.com/user/repository"
           @keyup.enter="checkGitHubRepoExists" />
         <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
-        <p v-if="errorMessages.githubUrl" :class="{ 'error': !isValidRepo, 'success': isValidRepo }">
+        <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
           {{ errorMessages.githubUrl }}
         </p>
+        <div class="metric-selection">
+            <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+            <label>
+                <input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+                Cyclomatic Complexity
+            </label>
+            <label>
+                <input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
+                Halstead
+            </label>
+            <label>
+                <input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+                Code
+            </label>
+            <label>
+                <input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
+                       @change="handleMetricChange" /> Defects Over Time
+            </label>
+            <label>
+                <input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
+                MTTR
+            </label>
+            <label>
+                <input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+                ICI
+            </label>
+            <label>
+                <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
+                Defects Stats
+            </label>
+
+            <label>
+                <input type="checkbox" value="fogindex" v-model="selectedMetrics" @change="handleMetricChange" />
+                Fog Index
+            </label>
+            <label>
+                <input type="checkbox" value="lcom4" v-model="selectedMetrics" @change="handleMetricChange" />
+                LCOM4
+            </label>
+
+
+            <label>
+                <input type="checkbox" value="lcomhs" v-model="selectedMetrics" @change="handleMetricChange" />
+                LCOMHS
+            </label>
+
+        </div>
       </div>
 
-      <br>
-      <br>
-      <div class="container-wrapper">
-        <div
-          :class="{ 'input-container2': !selectedMetrics.includes('DefectScore'), 'input-container-defect': selectedMetrics.includes('DefectScore') }"
-          v-if="isValidRepo">
-          <label>Select Metrics to Calculate:</label>
-          <div class="checkbox-group">
-            <div class="checkbox-item" v-for="metric in availableMetrics" :key="metric.value">
-              <input
-                type="checkbox"
-                :id="metric.value"
-                :value="metric.value"
-                v-model="selectedMetrics"
-                :disabled="!isValidRepo || !metric.isEnabled?.()"
-              />
-              <label :for="metric.value">{{ metric.label }}</label>
-            </div>
-          </div>
-        </div>
 
-        <!-- Tag Input Box for Defect Score -->
-        <div class="input-container3" v-if="selectedMetrics.includes('DefectScore')">
-          <label1>You can find the Defect tags and weights extracted from your project in the box below. If no tags
-            were
-            found, here are some default tags and weights. Customize them according to your need and click Update.
-          </label1>
-          <TagInput v-model:tags="tagsData" />
-          <label1>Once you have customized all of your tags and their weights, click on the Calculate button.</label1>
-        </div>
+
+      <br />
+      <br />
+      <!-- <div class="container-wrapper">
+      <div class="input-container2" v-if="isValidRepo">
+        <label>All metrics will be calculated automatically.</label>
       </div>
-      <br>
-      <br>
-      <button v-if="selectedMetrics.length > 0" @click="submitData"
-        :disabled="!isValidRepo || selectedMetrics.length === 0 || (selectedMetrics.includes('DefectScore') && tagsData.length === 0)">{{
-          buttonText }}</button>
-      <h4 class="loading-text" v-if="isLoading">Please Wait, your metrics are being computed.<br>The larger the reop,
-        the longer the time.</h4>
+      <br />
+      <br /> -->
+      <button @click="submitData" :disabled="!isValidRepo">
+        {{ buttonText }}
+      </button>
+      <h4 class="loading-text" v-if="isLoading">
+        Please Wait, your metrics are being computed.<br />
+        The larger the repo, the longer the time.
+      </h4>
     </div>
 
     <!-- Benchmark Input Dialog -->
     <div v-if="showBenchmarkDialog" class="dialog-overlay">
       <div class="dialog">
-        <h4>For each selected metric,
-          you can optionally enter a benchmark
-          score in the input box and choose whether to display it
-          on the chart by checking or unchecking the checkbox for that metric</h4>
-        <br>
+        <h4>
+          For each metric, you can optionally enter a benchmark score in the input box and choose whether to display it
+          on the chart by checking or unchecking the checkbox for that metric.
+        </h4>
+        <br />
         <div class="benchmark-container">
           <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
-            <div v-if="selectedMetrics.includes(metric.value)" class="metric-row">
-              <input type="checkbox" :id="`show-${metric.value}`" v-model="showBenchmarkLines[metric.value]" />
-              <div class="label-input-container">
-                <label :for="`benchmark-${metric.value}`">
-                  {{ metric.label }} Benchmark:
-                </label>
-                <input type="number" :id="`benchmark-${metric.value}`" v-model.number="benchmarkInputs[metric.benchmarkKey]"
-                  :placeholder="`Enter ${metric.label} benchmark`" />
-              </div>
+            <div class="label-input-container">
+              <label :for="`benchmark-${metric.value}`">
+                {{ metric.label }} Benchmark:
+              </label>
+              <input type="number" :id="`benchmark-${metric.value}`"
+                v-model.number="benchmarkInputs[metric.benchmarkKey]"
+                :placeholder="`Enter ${metric.label} benchmark`" />
             </div>
           </div>
         </div>
-
-        <div class="button-container">
-          <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
-        </div>
+      <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
       </div>
     </div>
 
-
+      <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
+      </div>
+    </div>
     <!-- Show Output Screen After Validation -->
-    <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
-      v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
+    <OutputView
+      :computedData="computedData"
+      :benchmarks="benchmarks"
+      :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput"
+      @goBack="showFormAgain"
+      @updateBenchmarks="postBenchmarks"
+    />
+    <LoadingSpinner v-if="isLoading" />
+
   </main>
   <!-- Footer Section -->
   <footer class="footer" v-if="!showOutput">
-    <p>&copy; 2024 Metric Calculator. All rights reserved.</p>
-    <p>Developed by: Aniket Patil, Aum Garasia, Satyam Shekhar, Uma Maheswar Reddy Nallamilli, Hitesh Kolluru, Smit Panchal, Thrupthi Hosahalli Manjunatha, Faisal Alaqal</p>
+    <p>&copy; 2025 Metric Calculator. All rights reserved.</p>
+    <p>
+      Developed by: SER516 Class (Spring 2025)
+    </p>
   </footer>
 </template>
 
 <script lang="ts">
-import { ref, reactive, watch, computed } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import axios from 'axios';
 import TagInput from './TagInput.vue';
 import OutputView from './OutputView.vue';
-import { METRICS, metricCfg } from '@/metricsConfig';
+import LoadingSpinner from './LoadingSpinner.vue';
+
 
 export default {
   name: 'HomeScreen',
-  components: { TagInput, OutputView },
+  components: { TagInput, OutputView, LoadingSpinner },
   setup() {
-    const githubUrl        = ref('');
-    const selectedMetrics  = ref<string[]>([]);
-    const errorMessages    = reactive({ githubUrl: '' });
-    const showOutput       = ref(false);
-    const isValidRepo      = ref(false);
+    const githubUrl = ref('');
+    const selectedMetrics = ref([]);
+    const errorMessages = reactive({ githubUrl: '' });
+    const showOutput = ref(false);
+    const isValidRepo = ref(false);
 
-    const benchmarks       = reactive<Record<string, number>>({});
-    const benchmarkInputs  = reactive<Record<string, number | ''>>({});
-    const showBenchmarkLines = reactive<Record<string, boolean>>({});
+    const benchmarks = reactive({});
+    const benchmarkInputs = reactive({});
+    const showBenchmarkLines = reactive({});
 
-    const tagsData         = ref<any[]>([]);
-    const computedData     = ref({});
+    const tagsData = ref([]);
+    const computedData = ref({});
     const showBenchmarkDialog = ref(false);
-    const buttonText       = ref('Calculate');
-    const isLoading        = ref(false);
+    const buttonText = ref('Calculate');
+    const isLoading = ref(false);
 
-
-    const loadingText = ref('Loading...');
-    const availableMetrics = computed(() =>
-      METRICS.map(metric => {
-        return {
-          ...metric,
-          isEnabled: () => {
-            if (!metric.dependsOn) return true; // If no dependencies, always enabled
-            return metric.dependsOn.every(dependency =>
-              selectedMetrics.value.includes(dependency)
-            ); // Check if all dependencies are selected
-          }
-        };
-      })
-    );
 
     const isValidGitHubUrl = (url) => {
       const regex = /^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/;
       return regex.test(url);
     };
 
-    const fetchBenchmarks = async () => {
-      try {
-        const metricsParam = selectedMetrics.value.join(',');
-        const { data } = await axios.get(
-          `http://localhost:8080/gateway/benchmark`,
-          { params: { gitHubLink: githubUrl.value, metrics: metricsParam } }
-        );
-        selectedMetrics.value.forEach(m => {
-          const key = metricCfg(m).benchmarkKey;
-          benchmarks[m] = data[key] ?? 0;
-        });
-      } catch (error) {
-        console.error('Error fetching benchmarks:', error);
-      }
-    };
-
-    const fetchTagsIfNeeded = async () => {
-      try {
-        const needsTags = selectedMetrics.value.filter(m => metricCfg(m).needsTags);
-        await Promise.all(
-          needsTags.map(async m => {
-            const path = metricCfg(m).extraPaths!.tags;
-            const { data } = await axios.get(
-              `http://localhost:8080/gateway/${path}`,
-              { params: { gitHubLink: githubUrl.value } }
-            );
-            tagsData.value = data;
-          })
-        );
-      } catch (error) {
-        console.error('Error fetching tags:', error);
-      }
-    };
-
-    // When metrics are selected, fetch benchmarks and (if applicable) defect score tag mapping
-    watch(selectedMetrics, async (metrics) => {
-      if (!metrics.length) return;
-
-      await Promise.all([fetchBenchmarks(), fetchTagsIfNeeded()]);
-
-      metrics.forEach(m => {
-        benchmarkInputs[metricCfg(m).benchmarkKey] = benchmarks[m] ?? '';
-        showBenchmarkLines[m] = true;
-      });
-    });
-
     const checkGitHubRepoExists = async () => {
+      isLoading.value = true;
       isValidRepo.value = false;
 
       if (!githubUrl.value) {
         errorMessages.githubUrl = 'Repository URL cannot be empty.';
+        isLoading.value = false;
         return;
       }
 
       if (!isValidGitHubUrl(githubUrl.value)) {
         errorMessages.githubUrl = 'Invalid GitHub URL format.';
+        isLoading.value = false;
         return;
       }
 
@@ -211,6 +191,7 @@ export default {
         const response = await fetch(apiUrl);
         if (!response.ok) {
           errorMessages.githubUrl = 'GitHub repository does not exist.';
+          isLoading.value = false;
           return;
         }
         const files = await response.json();
@@ -218,93 +199,389 @@ export default {
         if (!keys.includes('Java')) {
           errorMessages.githubUrl =
             'The repository does not have a Java project.';
+            isLoading.value = false;
           return;
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
+
+        const req = githubUrl.value;
+        const res = await axios.post(
+          'http://localhost:8080/add_repo',
+          { repo_url: req },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              mode: 'cors',
+            },
+          }
+        );
+        console.log('Response from backend:', res.data);
+        if (res.status === 200) {
+          console.log('Repository added successfully.');
+        } else {
+          console.error('Failed to add repository.');
+        }
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
+        isLoading.value = false;
+        return;
+      }
+      isLoading.value = false;
+    };
+
+    const submitData = async () => {
+      buttonText.value = 'Loading…';
+      isLoading.value = true;
+
+      try {
+        await calculateMetrics();
+        // showBenchmarkDialog.value = true;
+      } catch (e) {
+        console.error(e);
+      } finally {
+        isLoading.value = false;
+        buttonText.value = 'Calculate';
       }
     };
-    watch(githubUrl, () => {
-      isValidRepo.value = false;
-      errorMessages.githubUrl = '';
-      selectedMetrics.value = [];
-    });
 
     const calculateMetrics = async () => {
+
       try {
-        const metricsParam = selectedMetrics.value.join(',');
-        const { data } = await axios.post(
-          'http://localhost:8080/gateway/calculate',
-          { gitHubLink: githubUrl.value, metrics: metricsParam }
-        );
-        computedData.value = data;
-        return true;
+        const metrics = selectedMetrics.value;
+        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`;
+        const { data } = await axios.get(req);
+        console.log('Response from backend:', data);
+        const transformed = {};
+        (data.metrics_data ?? []).forEach(group => {
+          if (Array.isArray(group.cc) && group.cc.length) {
+
+            const cc = group.cc;
+            let dates = [];
+            let added_lines_list = [];
+            let deleted_lines_list = [];
+            let modified_lines_list = [];
+            let total_commits_list = [];
+            for (let i = 0; i < cc.length; i++) {
+              added_lines_list.push(cc[i].data.added_lines);
+              deleted_lines_list.push(cc[i].data.deleted_lines);
+              modified_lines_list.push(cc[i].data.modified_lines);
+              total_commits_list.push(cc[i].data.total_commits);
+              dates.push(cc[i].timestamp);
+            }
+
+            transformed.CC = {
+              timestamp: dates.reverse(),
+              data: {
+                added_lines: added_lines_list.reverse(),
+                deleted_lines: deleted_lines_list.reverse(),
+                modified_lines: modified_lines_list.reverse(),
+                total_commits: total_commits_list.reverse()
+              }
+            };
+          }
+
+          if (Array.isArray(group.ici) && group.ici.length) {
+            const ici = group.ici;
+            let dates = [];
+            let ici_score_list = [];
+            let repo_size_list = [];
+            for (let i = 0; i < ici.length; i++) {
+              ici_score_list.push(ici[i].data.ici_score);
+              repo_size_list.push(ici[i].data.repo_size_mb);
+              dates.push(ici[i].timestamp);
+            }
+            transformed.ICI = {
+              timestamp: dates.reverse(),
+              data: {
+                iCI_score: ici_score_list.reverse(),
+                repo_size_in_mB: repo_size_list.reverse()
+              }
+            };
+          }
+
+        if (Array.isArray(group.mttr) && group.mttr.length) {
+            const mttrArr = group.mttr;
+
+            const dates: number[] = [];
+            const mttrValues: number[] = [];
+
+            mttrArr.forEach(item => {
+                let value = 0.0;
+
+                if (
+                    item.data &&
+                    typeof item.data === 'object' &&
+                    item.data.error === null &&
+                    typeof item.data.mttr === 'number'
+                ) {
+                    value = item.data.mttr;                                     
+                }
+
+                dates.push(item.timestamp);                                   
+                mttrValues.push(value);                                        
+            });
+
+            transformed.MTTR = {
+                timestamp: dates.reverse(),
+                data: {
+                    score: mttrValues.reverse()
+                }
+            };
+        }
+
+
+          if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
+
+            const defects = group['defects-over-time'];
+            let dates = [];
+            let defect_closure_rate_list = [];
+            let defect_discovery_rate_list = [];
+            let open_issues_list = [];
+            let completed_issues_list = [];
+            let total_issues_list = [];
+            for (let i = 0; i < defects.length; i++) {
+              defect_closure_rate_list.push(defects[i].data.defect_closure_rate_last_30_days);
+              defect_discovery_rate_list.push(defects[i].data.defect_discovery_rate_last_30_days);
+              open_issues_list.push(defects[i].data.open_issues);
+              completed_issues_list.push(defects[i].data.completed_issues);
+              total_issues_list.push(defects[i].data.total_issues);
+              dates.push(defects[i].timestamp);
+            }
+            transformed.DefectsOverTime = {
+              timestamp: dates.reverse(),
+              data: {
+                defect_closure_rate_30d: defect_closure_rate_list.reverse(),
+                defect_discovery_rate_30d: defect_discovery_rate_list.reverse(),
+                open_issues: open_issues_list.reverse(),
+                completed_issues: completed_issues_list.reverse(),
+                total_issues: total_issues_list.reverse()
+              }
+            };
+          }
+
+          if (Array.isArray(group.loc) && group.loc.length) {
+            const loc = group.loc;
+            let dates = [];
+            const extractedData = loc.map(item => item.data);
+
+            for (let i = 0; i < loc.length; i++) {
+              dates.push(loc[i].timestamp);
+            }
+            transformed.LOC = {
+              timestamp: dates.reverse(),
+              data: extractedData.reverse()
+            };
+          }
+
+          if (Array.isArray(group.hal) && group.hal.length) {
+            const halData = group.hal;
+            let keys = [];
+            let dates = [];
+            const sum = halData[0].data.find(e => e.Summary)?.Summary;
+            keys = Object.keys(sum);
+            let metrics = {};
+            console.log('Keys:', keys);
+
+            for (let i = 0; i < halData.length; i++) {
+              dates.push(halData[i].timestamp);
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = [];
+            }
+
+            const entry = halData[0].data.find(e => e.Summary)?.Summary;
+            for (let i = 0; i < halData.length; i++) {
+              const entry = halData[i].data.find(e => e.Summary)?.Summary;
+              for (let j = 0; j < keys.length; j++) {
+                const key = keys[j];
+                metrics[key].push(entry[key]);
+              }
+            }
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = metrics[key].reverse();
+            }
+
+            transformed.Halstead = {
+              timestamp: dates.reverse(),
+              data: {
+                difficulty: metrics['Total Difficulty'],
+                effort: metrics['Total Efforts'],
+                volume: metrics['Total Program Volume'],
+                vocabulary: metrics['Total Program Vocabulary'],
+                length: metrics['Total Program Length']
+              }
+            };
+            console.log('Halstead:', transformed.Halstead);
+          }
+
+           if (Array.isArray(group['defects-stats']) && group['defects-stats'].length) {
+                const stats = group['defects-stats'];
+
+                const dates = [];
+                const percentages = [];
+
+                for (let i = 0; i < stats.length; i++) {
+                    const entry = stats[i];
+                    const dataBlock = Array.isArray(entry.data) ? entry.data[0] : null;
+
+                    if (dataBlock && typeof dataBlock.percentageBugsClosed === 'number') {
+                        percentages.push(dataBlock.percentageBugsClosed);
+                        dates.push(entry.timestamp);
+                    }
+                }
+
+                if (dates.length > 0 && percentages.length > 0) {
+                    transformed.DefectsStats = {
+                        timestamp: dates.reverse(),
+                        data: percentages.reverse()
+                    };
+                }
+            }
+            if (Array.isArray(group.lcom4) && group.lcom4.length) {
+                const dates = [];
+                const scores = [];
+
+                group.lcom4.forEach(entry => {
+                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+                    if (scoreObj && typeof scoreObj.score === 'number') {
+                        dates.push(entry.timestamp);
+                        scores.push(scoreObj.score);
+                    }
+                });
+
+                if (dates.length) {
+                    transformed.LCOM4 = {
+                        timestamp: dates.reverse(),
+                        data: scores.reverse()   
+                    };
+                }
+            }
+
+            if (Array.isArray(group.lcomhs) && group.lcomhs.length) {
+                const dates = [];
+                const scores = [];
+
+                group.lcomhs.forEach(entry => {
+                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+                    if (scoreObj && typeof scoreObj.score === 'number') {
+                        dates.push(entry.timestamp);
+                        scores.push(scoreObj.score);
+                    }
+                });
+
+                if (dates.length) {
+                    transformed.LCOMHS = {
+                        timestamp: dates.reverse(),
+                        data: scores.reverse()
+                    };
+                }
+            }
+
+            if (Array.isArray(group.fogindex) && group.fogindex.length) {
+                const fogArr = group.fogindex;
+
+                const dates = [];
+                const fogindexactual = []
+                const pctComplexWordsList = [];
+                const totalFilesList = [];
+                const avgSentenceLengthList = [];
+                const fogIndexVal = []
+
+                fogArr.forEach(item => {
+                    const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
+
+                    dates.push(item.timestamp);     
+                    fogindexactual.push(d.fogIndex);
+                    pctComplexWordsList.push(d.percentageComplexWords);
+                    totalFilesList.push(d.totalFiles);
+                    avgSentenceLengthList.push(d.averageSentenceLength);
+                    fogIndexVal.push(d.fogIndex);
+                });
+
+                transformed.FogIndex = {
+                    timestamp: dates.reverse(),
+                    data: {
+                        fog_index: fogindexactual.reverse(),
+                        pct_complex_words: pctComplexWordsList.reverse(),
+                        total_files: totalFilesList.reverse(),
+                        avg_sentence_length: avgSentenceLengthList.reverse(),
+                        fog_index: fogIndexVal.reverse()
+                    }
+                };
+
+
+            }
+          if (Array.isArray(group.cyclo) && group.cyclo.length) {
+            const cD = group.cyclo;
+            let keys = [];
+            let dates = [];
+            let Metrics = {};
+
+            for (let i = 0; i < cD.length; i++) {
+              dates.push(cD[i].timestamp);
+            }
+
+            cD[0].data.forEach(entry => {
+              for (const [key, value] of Object.entries(entry)) {
+                if (typeof value === 'number') {
+                  keys.push(key);
+                }
+              }
+            })
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = [];
+            }
+
+            for (let i = 0; i < cD.length; i++) {
+              const entry = cD[i].data;
+              for (let j = 0; j < entry.length; j++) {
+                const key = Object.keys(entry[j])[0];
+                if (Metrics[key]) {
+                  Metrics[key].push(entry[j][key]);
+                }
+              }
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = Metrics[key].reverse();
+            }
+            transformed.Cyclo = {
+              timestamp: dates.reverse(),
+              data: Metrics
+            };
+          }
+        });
+        computedData.value = transformed;
+        showBenchmarkDialog.value = true;
       } catch (error) {
         console.error('Error sending data to backend:', error);
         return false;
       }
     };
 
-    const postLabelMappings = async () => {
-      try {
-        const needsTags = selectedMetrics.value.filter(m => metricCfg(m).needsTags);
 
-        await Promise.all(
-          needsTags.map(m =>
-            axios.post(
-              `http://localhost:8080/gateway/${metricCfg(m).extraPaths!.tags}`,
-              { gitHubLink: githubUrl.value, labelSeverityMap: tagsData.value }
-            )
-          )
-        );
-      } catch (error) {
-        console.error('Error updating defect score mapping:', error);
-        return;
-      }
-    };
 
-    const submitData = async () => {
-      buttonText.value = 'Loading…';
-      isLoading.value  = true;
-
-      try {
-        await postLabelMappings();
-        await calculateMetrics();
-        showBenchmarkDialog.value = true;
-      } catch (e) {
-        console.error(e);
-      } finally {
-        isLoading.value  = false;
-        buttonText.value = 'Calculate';
-      }
-    };
-
-    const showFormAgain = () => {
-      showOutput.value = false;
-      buttonText.value = 'Calculate';
-    };
-
-    //New function to handle the benchmark submission
     const handleBenchmarkSubmit = async () => {
       showBenchmarkDialog.value = false; // close the dialog
-      await postBenchmarks(benchmarkInputs);
-      showOutput.value = true; //Show the output, with or without benchmarks
+      // await postBenchmarks(benchmarkInputs);
+      showOutput.value = true; // Show the output, with or without benchmarks
     };
 
     const postBenchmarks = async (benchmarkData) => {
       try {
-        const list = JSON.parse(JSON.stringify(selectedMetrics.value));
-        let metricsString = list.join(", ");
         const lowerCaseBenchmarks = {};
         Object.keys(benchmarkData).forEach((key) => {
-          // If the benchmark is provided, update the value
           if (benchmarkData[key] !== '') {
             lowerCaseBenchmarks[key.toLowerCase()] = benchmarkData[key];
-          }
-          // If the benchmark is not provided, use the previous value
-          else {
+          } else {
             lowerCaseBenchmarks[key.toLowerCase()] = benchmarks[key];
           }
         });
@@ -313,7 +590,6 @@ export default {
           {
             gitHubLink: githubUrl.value,
             benchmarks: lowerCaseBenchmarks,
-            metrics: metricsString,
           },
           {
             headers: {
@@ -324,42 +600,46 @@ export default {
           }
         );
         console.log('Benchmark updated:', benchmarkRequest.data);
-        // Retrieve the updated benchmarks
-        fetchBenchmarks();
       } catch (error) {
         console.error('Error updating benchmarks:', error);
       }
     };
 
+    const showFormAgain = () => {
+      showOutput.value = false;
+      buttonText.value = 'Calculate';
+    };
+
+    watch(githubUrl, () => {
+      isValidRepo.value = false;
+      errorMessages.githubUrl = '';
+    });
+
     return {
       githubUrl,
-      selectedMetrics,
       errorMessages,
       submitData,
       showOutput,
       showFormAgain,
       checkGitHubRepoExists,
       isValidRepo,
-      availableMetrics,
       computedData,
       benchmarks,
       tagsData,
       isLoading,
-      loadingText,
       buttonText,
       postBenchmarks,
       showBenchmarkDialog,
       benchmarkInputs,
       handleBenchmarkSubmit,
       showBenchmarkLines,
+      selectedMetrics,
     };
   },
 };
 </script>
 
 <style scoped>
-
-
 header {
   background: linear-gradient(to right, #09203f, #537895);
   padding: px;
@@ -377,10 +657,7 @@ header {
 }
 
 footer {
-  /* REMOVE position: fixed; */
-  /* position: relative;  ← default, can be omitted */
-
-  flex-shrink: 0;        /*  don’t let it collapse when the page is short  */
+  flex-shrink: 0;
   background: linear-gradient(to right, #09203f, #537895);
   color: #fff;
   text-align: center;
@@ -388,9 +665,14 @@ footer {
   font-size: 10px;
   font-weight: bold;
 }
-/* large heights keep it fixed */
+
 @media (min-height: 700px) {
-  footer { position: fixed; left: 0; right: 0; bottom: 0; }
+  footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
 }
 
 .input-container1 {
@@ -416,26 +698,6 @@ footer {
   text-align: left;
 }
 
-.input-container3 {
-  margin-top: 20px auto;
-  width: 50%;
-  max-width: 400px;
-  text-align: left;
-  margin-left: 0px;
-  margin-right: 320px;
-  margin-bottom: 0px;
-  padding-left: 20px;
-  border-left: 1px solid #007bff;
-}
-
-
-.input-container-defect {
-  margin: 10px auto;
-  margin-left: 450px;
-  text-align: left;
-}
-
-
 label {
   font-size: 16px;
   font-weight: bold;
@@ -443,15 +705,8 @@ label {
   margin-bottom: 5px;
 }
 
-label1 {
-  font-size: 13px;
-  font-weight: bold;
-  display: block;
-  margin-bottom: 5px;
-}
-
-input[type="text"],
-input[type="number"] {
+input[type='text'],
+input[type='number'] {
   display: block;
   width: 100%;
   padding: 10px;
@@ -459,19 +714,6 @@ input[type="number"] {
   margin-bottom: 5px;
   border: 1px solid #ccc;
   border-radius: 5px;
-}
-
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .error {
@@ -495,50 +737,16 @@ button:hover {
   background-color: #0056b3;
 }
 
-.tag-input {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.tag {
-  background-color: #e0e0e0;
-  padding: 5px 10px;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.remove-tag {
-  cursor: pointer;
-  font-weight: bold;
-  color: red;
-}
-
 .success {
   color: green;
   font-size: 14px;
   margin-top: 5px;
 }
 
-.checkbox-group.disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
 .loading-text {
   color: #0056b3;
 }
 
-/* Styles for the dialog */
-/* Overlay for the dialog */
 .dialog-overlay {
   position: fixed;
   top: 0;
@@ -552,7 +760,6 @@ button:hover {
   z-index: 1000;
 }
 
-/* Dialog box styling */
 .dialog {
   background-color: white;
   padding: 25px;
@@ -564,15 +771,13 @@ button:hover {
   min-width: 350px;
 }
 
-/* Header styling */
-.dialog h3 {
+.dialog h4 {
   margin-bottom: 20px;
   font-size: 18px;
   font-weight: bold;
   color: #333;
 }
 
-/* Container for all benchmark inputs */
 .benchmark-container {
   display: flex;
   flex-direction: column;
@@ -581,7 +786,6 @@ button:hover {
   width: 100%;
 }
 
-/* Individual benchmark item */
 .benchmark-item {
   display: flex;
   flex-direction: column;
@@ -589,7 +793,6 @@ button:hover {
   width: 100%;
 }
 
-/* Label styling */
 .dialog label {
   font-size: 14px;
   font-weight: bold;
@@ -598,8 +801,7 @@ button:hover {
   text-align: center;
 }
 
-/* Input field styling */
-.dialog input[type="number"] {
+.dialog input[type='number'] {
   width: 80%;
   padding: 8px;
   font-size: 14px;
@@ -608,7 +810,6 @@ button:hover {
   text-align: center;
 }
 
-/* Checkbox container */
 .checkbox-container {
   display: flex;
   align-items: center;
@@ -617,7 +818,6 @@ button:hover {
   flex-direction: row-reverse;
 }
 
-/* Button styling */
 .button-container {
   margin-top: 20px;
 }
@@ -658,7 +858,7 @@ button:hover {
   font-weight: bold;
 }
 
-.label-input-container input[type="number"] {
+.label-input-container input[type='number'] {
   padding: 5px;
   font-size: 14px;
   border: 1px solid #ccc;
@@ -667,7 +867,7 @@ button:hover {
   text-align: left;
 }
 
-.metric-row input[type="checkbox"] {
+.metric-row input[type='checkbox'] {
   width: 16px;
   height: 16px;
   margin-right: 5px;
