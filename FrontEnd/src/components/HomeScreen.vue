@@ -253,7 +253,7 @@ export default {
             }
 
             transformed.CC = {
-              timestamp: dates.reverse(),
+              timestamp: dates.sort(),
               data: {
                 added_lines: added_lines_list.reverse(),
                 deleted_lines: deleted_lines_list.reverse(),
@@ -274,7 +274,7 @@ export default {
               dates.push(ici[i].timestamp);
             }
             transformed.ICI = {
-              timestamp: dates.reverse(),
+              timestamp: dates.sort(),
               data: {
                 iCI_score: ici_score_list.reverse(),
                 repo_size_in_mB: repo_size_list.reverse()
@@ -305,7 +305,7 @@ export default {
             });
 
             transformed.MTTR = {
-              timestamp: dates.reverse(),
+              timestamp: dates.sort(),
               data: {
                 score: mttrValues.reverse()
               }
@@ -331,7 +331,7 @@ export default {
               dates.push(defects[i].timestamp);
             }
             transformed.DefectsOverTime = {
-              timestamp: dates.reverse(),
+              timestamp: dates.sort(),
               data: {
                 defect_closure_rate_30d: defect_closure_rate_list.reverse(),
                 defect_discovery_rate_30d: defect_discovery_rate_list.reverse(),
@@ -351,7 +351,7 @@ export default {
               dates.push(loc[i].timestamp);
             }
             transformed.LOC = {
-              timestamp: dates.reverse(),
+              timestamp: dates.sort(),
               data: extractedData.reverse()
             };
           }
@@ -388,7 +388,7 @@ export default {
             }
 
             transformed.Halstead = {
-              timestamp: dates.reverse(),
+              timestamp: dates.sort(),
               data: {
                 difficulty: metrics['Total Difficulty'],
                 effort: metrics['Total Efforts'],
@@ -418,7 +418,7 @@ export default {
 
             if (dates.length > 0 && percentages.length > 0) {
               transformed.DefectsStats = {
-                timestamp: dates.reverse(),
+                timestamp: dates.sort(),
                 data: percentages.reverse()
               };
             }
@@ -437,7 +437,7 @@ export default {
 
             if (dates.length) {
               transformed.LCOM4 = {
-                timestamp: dates.reverse(),
+                timestamp: dates.sort(),
                 data: scores.reverse()
               };
             }
@@ -457,7 +457,7 @@ export default {
 
             if (dates.length) {
               transformed.LCOMHS = {
-                timestamp: dates.reverse(),
+                timestamp: dates.sort(),
                 data: scores.reverse()
               };
             }
@@ -535,7 +535,7 @@ export default {
               Metrics[key] = Metrics[key].reverse();
             }
             transformed.Cyclo = {
-              timestamp: dates.reverse(),
+              timestamp: dates.sort(),
               data: Metrics
             };
           }
