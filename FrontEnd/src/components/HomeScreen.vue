@@ -17,6 +17,36 @@
           {{ errorMessages.githubUrl }}
         </p>
         <div class="metric-selection">
+          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+          <label>
+            <input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+            Cyclomatic Complexity
+          </label>
+          <label>
+            <input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
+            Halstead
+          </label>
+          <label>
+            <input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+            Code
+          </label>
+          <label>
+            <input type="checkbox" value="defects-over-time" v-model="selectedMetrics" @change="handleMetricChange" />
+            Defects Over Time
+          </label>
+          <label>
+            <input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
+            MTTR
+          </label>
+          <label>
+            <input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+            ICI
+          </label>
+          <label>
+            <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
+            Defects Stats
+          </label>
+
           <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> Code
             Churn</label>
           <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
@@ -156,6 +186,24 @@ export default {
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
         // Finally, add repo to shared volume.
+        const req = githubUrl.value.toLowerCase();
+        const res = await axios.post(
+          'http://localhost:8080/add_repo',
+          { repo_url: req },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              mode: 'cors',
+            },
+          }
+        );
+        console.log('Response from backend:', res.data);
+        if (res.status === 200) {
+          console.log('Repository added successfully.');
+        } else {
+          console.error('Failed to add repository.');
+        }
         const req = githubUrl.value;
         const res = await axios.post(
           'http://localhost:8080/add_repo',
@@ -205,6 +253,7 @@ export default {
         const transformed = {};
         (data.metrics_data ?? []).forEach(group => {
           if (Array.isArray(group.cc) && group.cc.length) {
+
             const cc = group.cc;
             let dates = [];
             let added_lines_list = [];
