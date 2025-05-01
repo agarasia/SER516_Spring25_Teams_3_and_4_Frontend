@@ -17,19 +17,51 @@
           {{ errorMessages.githubUrl }}
         </p>
         <div class="metric-selection">
-          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> Code
-            Churn</label>
-          <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
-            Code</label>
-          <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead
-            Metrics</label>
-          <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
-            Cyclomatic
-            Complexity</label>
-          <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
-              @change="handleMetricChange" /> Defects Over Time</label>
-          <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
-            ICI</label>
+            <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+            <label>
+                <input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+                Cyclomatic Complexity
+            </label>
+            <label>
+                <input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
+                Halstead
+            </label>
+            <label>
+                <input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+                Code
+            </label>
+            <label>
+                <input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
+                       @change="handleMetricChange" /> Defects Over Time
+            </label>
+            <label>
+                <input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
+                MTTR
+            </label>
+            <label>
+                <input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+                ICI
+            </label>
+            <label>
+                <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
+                Defects Stats
+            </label>
+
+            <label>
+                <input type="checkbox" value="fogindex" v-model="selectedMetrics" @change="handleMetricChange" />
+                Fog Index
+            </label>
+            <label>
+                <input type="checkbox" value="lcom4" v-model="selectedMetrics" @change="handleMetricChange" />
+                LCOM4
+            </label>
+
+
+            <label>
+                <input type="checkbox" value="lcomhs" v-model="selectedMetrics" @change="handleMetricChange" />
+                LCOMHS
+            </label>
+
         </div>
       </div>
 
@@ -269,25 +301,36 @@ export default {
             };
           }
 
-          // if (Array.isArray(group.mttr) && group.mttr.length) {
-          //   const mttr = group.mttr[0];
+        if (Array.isArray(group.mttr) && group.mttr.length) {
+            const mttrArr = group.mttr;
 
-          //   if (mttr.data
-          //     && typeof mttr.data === 'object'
-          //     && mttr.data.error === null
-          //     && typeof mttr.data.mttr === 'number') {
-          //     transformed.MTTR = {
-          //       timestamp: mttr.timestamp ?? Date.now(),
-          //       data: mttr.data.mttr
-          //     }
-          //   }
-          //   else {
-          //     transformed.MTTR = {
-          //       timestamp: mttr.timestamp ?? Date.now(),
-          //       data: 0.0
-          //     };
-          //   }
-          // }
+            const dates: number[] = [];
+            const mttrValues: number[] = [];
+
+            mttrArr.forEach(item => {
+                let value = 0.0;
+
+                if (
+                    item.data &&
+                    typeof item.data === 'object' &&
+                    item.data.error === null &&
+                    typeof item.data.mttr === 'number'
+                ) {
+                    value = item.data.mttr;                                     
+                }
+
+                dates.push(item.timestamp);                                   
+                mttrValues.push(value);                                        
+            });
+
+            transformed.MTTR = {
+                timestamp: dates.reverse(),
+                data: {
+                    score: mttrValues.reverse()
+                }
+            };
+        }
+
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
 
@@ -358,7 +401,6 @@ export default {
                 metrics[key].push(entry[key]);
               }
             }
-
             for (let i = 0; i < keys.length; i++) {
               const key = keys[i];
               metrics[key] = metrics[key].reverse();
@@ -377,6 +419,103 @@ export default {
             console.log('Halstead:', transformed.Halstead);
           }
 
+           if (Array.isArray(group['defects-stats']) && group['defects-stats'].length) {
+                const stats = group['defects-stats'];
+
+                const dates = [];
+                const percentages = [];
+
+                for (let i = 0; i < stats.length; i++) {
+                    const entry = stats[i];
+                    const dataBlock = Array.isArray(entry.data) ? entry.data[0] : null;
+
+                    if (dataBlock && typeof dataBlock.percentageBugsClosed === 'number') {
+                        percentages.push(dataBlock.percentageBugsClosed);
+                        dates.push(entry.timestamp);
+                    }
+                }
+
+                if (dates.length > 0 && percentages.length > 0) {
+                    transformed.DefectsStats = {
+                        timestamp: dates.reverse(),
+                        data: percentages.reverse()
+                    };
+                }
+            }
+            if (Array.isArray(group.lcom4) && group.lcom4.length) {
+                const dates = [];
+                const scores = [];
+
+                group.lcom4.forEach(entry => {
+                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+                    if (scoreObj && typeof scoreObj.score === 'number') {
+                        dates.push(entry.timestamp);
+                        scores.push(scoreObj.score);
+                    }
+                });
+
+                if (dates.length) {
+                    transformed.LCOM4 = {
+                        timestamp: dates.reverse(),
+                        data: scores.reverse()   
+                    };
+                }
+            }
+
+            if (Array.isArray(group.lcomhs) && group.lcomhs.length) {
+                const dates = [];
+                const scores = [];
+
+                group.lcomhs.forEach(entry => {
+                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+                    if (scoreObj && typeof scoreObj.score === 'number') {
+                        dates.push(entry.timestamp);
+                        scores.push(scoreObj.score);
+                    }
+                });
+
+                if (dates.length) {
+                    transformed.LCOMHS = {
+                        timestamp: dates.reverse(),
+                        data: scores.reverse()
+                    };
+                }
+            }
+
+            if (Array.isArray(group.fogindex) && group.fogindex.length) {
+                const fogArr = group.fogindex;
+
+                const dates = [];
+                const fogindexactual = []
+                const pctComplexWordsList = [];
+                const totalFilesList = [];
+                const avgSentenceLengthList = [];
+                const fogIndexVal = []
+
+                fogArr.forEach(item => {
+                    const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
+
+                    dates.push(item.timestamp);     
+                    fogindexactual.push(d.fogIndex);
+                    pctComplexWordsList.push(d.percentageComplexWords);
+                    totalFilesList.push(d.totalFiles);
+                    avgSentenceLengthList.push(d.averageSentenceLength);
+                    fogIndexVal.push(d.fogIndex);
+                });
+
+                transformed.FogIndex = {
+                    timestamp: dates.reverse(),
+                    data: {
+                        fog_index: fogindexactual.reverse(),
+                        pct_complex_words: pctComplexWordsList.reverse(),
+                        total_files: totalFilesList.reverse(),
+                        avg_sentence_length: avgSentenceLengthList.reverse(),
+                        fog_index: fogIndexVal.reverse()
+                    }
+                };
+
+
+            }
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
             const cD = group.cyclo;
             let keys = [];
