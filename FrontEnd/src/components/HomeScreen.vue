@@ -271,25 +271,34 @@ export default {
             };
           }
 
-          if (Array.isArray(group.mttr) && group.mttr.length) {
-            const mttr = group.mttr[0];
+            if (Array.isArray(group.mttr) && group.mttr.length) {
+                const mttrArr = group.mttr;
 
-            if (mttr.data
-              && typeof mttr.data === 'object'
-              && mttr.data.error === null
-              && typeof mttr.data.mttr === 'number') {
-              transformed.MTTR = {
-                timestamp: mttr.timestamp ?? Date.now(),
-                data: mttr.data.mttr
-              }
+                const dates: number[] = [];
+                const mttrValues: number[] = [];
+
+                mttrArr.forEach(item => {
+                    let value = 0.0;
+
+                    if (
+                        item.data &&
+                        typeof item.data === 'object' &&
+                        item.data.error === null &&
+                        typeof item.data.mttr === 'number'
+                    ) {
+                        value = item.data.mttr;                                     
+                    }
+
+                    dates.push(item.timestamp);                                   
+                    mttrValues.push(value);                                        
+                });
+
+                transformed.MTTR = {
+                    timestamp: dates.reverse(),    // newest first
+                    data: mttrValues.reverse()
+                };
             }
-            else {
-              transformed.MTTR = {
-                timestamp: mttr.timestamp ?? Date.now(),
-                data: 0.0
-              };
-            }
-          }
+
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
 
