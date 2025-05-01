@@ -32,6 +32,7 @@ jobs:
           cd FrontEnd
           IMAGE_NAME=${DOCKERHUB_USERNAME}/app-frontend:${RELEASE_TAG}
           docker build \
+            --build-arg GITHUB_TOKEN=${{ secrets.FRONTEND_GITHUB_TOKEN }} \
             -t "$IMAGE_NAME" \
             -f dockerfile \
             .
