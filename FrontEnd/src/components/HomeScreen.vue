@@ -41,10 +41,8 @@
       <div class="input-container2" v-if="isValidRepo">
         <label>All metrics will be calculated automatically.</label>
       </div>
-
-    </div>
-    <br />
-    <br /> -->
+      <br />
+      <br /> -->
       <button @click="submitData" :disabled="!isValidRepo">
         {{ buttonText }}
       </button>
@@ -74,7 +72,10 @@
             </div>
           </div>
         </div>
+      <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
       </div>
+    </div>
 
       <div class="button-container">
         <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
