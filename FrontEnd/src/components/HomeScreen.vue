@@ -17,9 +17,15 @@
           {{ errorMessages.githubUrl }}
         </p>
         <div class="metric-selection">
-          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> Code
+            Churn</label>
           <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
             Code</label>
+          <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead
+            Metrics</label>
+          <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+            Cyclomatic
+            Complexity</label>
           <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
               @change="handleMetricChange" /> Defects Over Time</label>
           <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
@@ -73,10 +79,7 @@
       <div class="button-container">
         <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
       </div>
-      <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
-        v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
     </div>
-
     <!-- Show Output Screen After Validation -->
     <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
       v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
@@ -153,24 +156,24 @@ export default {
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
         // Finally, add repo to shared volume.
-        const req = githubUrl.value.toLowerCase();
-        // const res = await axios.post(
-        //   'http://localhost:8080/add_repo',
-        //   { repo_url: req },
-        //   {
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //       'Access-Control-Allow-Origin': '*',
-        //       mode: 'cors',
-        //     },
-        //   }
-        // );
-        // console.log('Response from backend:', res.data);
-        // if (res.status === 200) {
-        //   console.log('Repository added successfully.');
-        // } else {
-        //   console.error('Failed to add repository.');
-        // }
+        const req = githubUrl.value;
+        const res = await axios.post(
+          'http://localhost:8080/add_repo',
+          { repo_url: req },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              mode: 'cors',
+            },
+          }
+        );
+        console.log('Response from backend:', res.data);
+        if (res.status === 200) {
+          console.log('Repository added successfully.');
+        } else {
+          console.error('Failed to add repository.');
+        }
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
@@ -196,7 +199,7 @@ export default {
 
       try {
         const metrics = selectedMetrics.value;
-        const req = `http://localhost:8080/get_metrics?repo_url=https://github.com/aapati17/testjavaproject&metrics=${metrics}`.toLowerCase();
+        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`;
         const { data } = await axios.get(req);
         console.log('Response from backend:', data);
         const transformed = {};
@@ -246,25 +249,25 @@ export default {
             };
           }
 
-          if (Array.isArray(group.mttr) && group.mttr.length) {
-            const mttr = group.mttr[0];
+          // if (Array.isArray(group.mttr) && group.mttr.length) {
+          //   const mttr = group.mttr[0];
 
-            if (mttr.data
-              && typeof mttr.data === 'object'
-              && mttr.data.error === null
-              && typeof mttr.data.mttr === 'number') {
-              transformed.MTTR = {
-                timestamp: mttr.timestamp ?? Date.now(),
-                data: mttr.data.mttr
-              }
-            }
-            else {
-              transformed.MTTR = {
-                timestamp: mttr.timestamp ?? Date.now(),
-                data: 0.0
-              };
-            }
-          }
+          //   if (mttr.data
+          //     && typeof mttr.data === 'object'
+          //     && mttr.data.error === null
+          //     && typeof mttr.data.mttr === 'number') {
+          //     transformed.MTTR = {
+          //       timestamp: mttr.timestamp ?? Date.now(),
+          //       data: mttr.data.mttr
+          //     }
+          //   }
+          //   else {
+          //     transformed.MTTR = {
+          //       timestamp: mttr.timestamp ?? Date.now(),
+          //       data: 0.0
+          //     };
+          //   }
+          // }
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
 
@@ -310,49 +313,91 @@ export default {
           }
 
           if (Array.isArray(group.hal) && group.hal.length) {
-            const hal = group.hal[0];
+            const halData = group.hal;
+            let keys = [];
+            let dates = [];
+            const sum = halData[0].data.find(e => e.Summary)?.Summary;
+            keys = Object.keys(sum);
             let metrics = {};
-            if (Array.isArray(hal.data)) {
-              const summary = hal.data.find(e => e.Summary)?.Summary;
-              const firstFile = hal.data.find(e => e.metrics)?.metrics;
-              metrics = summary ?? firstFile ?? {};
+            console.log('Keys:', keys);
+
+            for (let i = 0; i < halData.length; i++) {
+              dates.push(halData[i].timestamp);
             }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = [];
+            }
+
+            const entry = halData[0].data.find(e => e.Summary)?.Summary;
+            for (let i = 0; i < halData.length; i++) {
+              const entry = halData[i].data.find(e => e.Summary)?.Summary;
+              for (let j = 0; j < keys.length; j++) {
+                const key = keys[j];
+                metrics[key].push(entry[key]);
+              }
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = metrics[key].reverse();
+            }
+
             transformed.Halstead = {
-              timestamp: hal.timestamp ?? Date.now(),
+              timestamp: dates.reverse(),
               data: {
-                difficulty: metrics['Total Difficulty'] ?? metrics.Difficulty,
-                effort: metrics['Total Efforts'] ?? metrics.Effort,
-                //volume: metrics['Total Program Volume'] ?? metrics['Program Volume'],
-                //vocabulary: metrics['Total Program Vocabulary'] ?? metrics['Program Vocabulary'],
-                //length: metrics['Total Program Length'] ?? metrics['Program Length']
+                difficulty: metrics['Total Difficulty'],
+                effort: metrics['Total Efforts'],
+                volume: metrics['Total Program Volume'],
+                vocabulary: metrics['Total Program Vocabulary'],
+                length: metrics['Total Program Length']
               }
             };
+            console.log('Halstead:', transformed.Halstead);
           }
 
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
-            const cyclo = group.cyclo[0];
-            let metrics = {};
+            const cD = group.cyclo;
+            let keys = [];
+            let dates = [];
+            let Metrics = {};
 
-            if (Array.isArray(cyclo.data)) {
-              cyclo.data.forEach(entry => {
-                for (const [key, value] of Object.entries(entry)) {
-                  if (typeof value === 'number') {
-                    metrics[key] = value;
-                  }
+            for (let i = 0; i < cD.length; i++) {
+              dates.push(cD[i].timestamp);
+            }
+
+            cD[0].data.forEach(entry => {
+              for (const [key, value] of Object.entries(entry)) {
+                if (typeof value === 'number') {
+                  keys.push(key);
                 }
-              });
+              }
+            })
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = [];
+            }
+
+            for (let i = 0; i < cD.length; i++) {
+              const entry = cD[i].data;
+              for (let j = 0; j < entry.length; j++) {
+                const key = Object.keys(entry[j])[0];
+                if (Metrics[key]) {
+                  Metrics[key].push(entry[j][key]);
+                }
+              }
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = Metrics[key].reverse();
             }
             transformed.Cyclo = {
-              timestamp: cyclo.timestamp ?? Date.now(),
-              data: {
-                total_cyclomatic_complexity: metrics['total cyclomatic complexity']
-                //max_cyclomatic: metrics['max cyclomatic complexity'],
-                //functions_evaluated: metrics['functions evaluated']
-                //average_cyclomatic: metrics['average cyclomatic complexity'],
-
-              }
+              timestamp: dates.reverse(),
+              data: Metrics
             };
-
           }
         });
         computedData.value = transformed;
