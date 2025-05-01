@@ -104,14 +104,14 @@
             </div>
           </div>
         </div>
-      <div class="button-container">
-        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
-      </div>
+        <div class="button-container">
+          <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
+        </div>
     </div>
 
-      <div class="button-container">
-        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
-      </div>
+      <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
+        v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
+
     </div>
     <!-- Show Output Screen After Validation -->
     <OutputView
