@@ -52,6 +52,17 @@
                 Fog Index
             </label>
 
+            <label>
+                <input type="checkbox" value="lcom4" v-model="selectedMetrics" @change="handleMetricChange" />
+                LCOM4
+            </label>
+
+
+            <label>
+                <input type="checkbox" value="lcomhs" v-model="selectedMetrics" @change="handleMetricChange" />
+                LCOMHS
+            </label>
+
         </div>
       </div>
 
@@ -300,7 +311,9 @@ export default {
 
                 transformed.MTTR = {
                     timestamp: dates.reverse(),    // newest first
-                    data: mttrValues.reverse()
+                    data: {
+                        score: mttrValues.reverse()
+                    }
                 };
             }
 
@@ -407,11 +420,51 @@ export default {
                     };
                 }
             }
+            if (Array.isArray(group.lcom4) && group.lcom4.length) {
+                const dates = [];
+                const scores = [];
+
+                group.lcom4.forEach(entry => {
+                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+                    if (scoreObj && typeof scoreObj.score === 'number') {
+                        dates.push(entry.timestamp);
+                        scores.push(scoreObj.score);
+                    }
+                });
+
+                if (dates.length) {
+                    transformed.LCOM4 = {
+                        timestamp: dates.reverse(),
+                        data: scores.reverse()   
+                    };
+                }
+            }
+
+            if (Array.isArray(group.lcomhs) && group.lcomhs.length) {
+                const dates = [];
+                const scores = [];
+
+                group.lcomhs.forEach(entry => {
+                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+                    if (scoreObj && typeof scoreObj.score === 'number') {
+                        dates.push(entry.timestamp);
+                        scores.push(scoreObj.score);
+                    }
+                });
+
+                if (dates.length) {
+                    transformed.LCOMHS = {
+                        timestamp: dates.reverse(),
+                        data: scores.reverse()
+                    };
+                }
+            }
 
             if (Array.isArray(group.fogindex) && group.fogindex.length) {
                 const fogArr = group.fogindex;
 
                 const dates = [];
+                const fogindexactual = []
                 const pctComplexWordsList = [];
                 const totalFilesList = [];
                 const avgSentenceLengthList = [];
@@ -419,7 +472,8 @@ export default {
                 fogArr.forEach(item => {
                     const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
 
-                    dates.push(item.timestamp);                        
+                    dates.push(item.timestamp);     
+                    fogindexactual.push(d.fogIndex);
                     pctComplexWordsList.push(d.percentageComplexWords);
                     totalFilesList.push(d.totalFiles);
                     avgSentenceLengthList.push(d.averageSentenceLength);
@@ -428,6 +482,7 @@ export default {
                 transformed.FogIndex = {
                     timestamp: dates.reverse(),
                     data: {
+                        fog_index: fogindexactual.reverse(),
                         pct_complex_words: pctComplexWordsList.reverse(),
                         total_files: totalFilesList.reverse(),
                         avg_sentence_length: avgSentenceLengthList.reverse()

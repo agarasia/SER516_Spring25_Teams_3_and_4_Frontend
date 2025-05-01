@@ -93,8 +93,9 @@ export default {
       { value: 'Cyclo', label: 'Cyclomatic Complexity', dataDict: true },
       { value: 'Halstead', label: 'Halstead Complexity', dataDict: true },
       { value: 'DefectsStats', label: 'Defects Stats', dataDict: true }, 
-      { value: 'FogIndex', label: 'Fog Index', dataDict: true }
-
+      { value: 'FogIndex', label: 'Fog Index', dataDict: true },
+      { value: 'LCOM4', label: 'LCOM4 Scores', dataDict: false },
+      { value: 'LCOMHS', label: 'LCOMHS Scores', dataDict: false }
     ];
 
     // Filter metrics based on availability in computedData
