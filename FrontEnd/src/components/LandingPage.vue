@@ -1,29 +1,33 @@
 <template>
-  <div class="landing">
-    <!-- Top Section -->
-    <div class="section glass">
-      <div class="text">
-        <h1>Welcome to Metric Calculator</h1>
-        <p>A platform for calculating software quality metrics easily.</p>
+  <div style="background-color: #f4f4f5;">
+    <div class="landing">
+      <!-- Top Section -->
+      <div class="section glass">
+        <div class="text">
+          <h1>Welcome to Metric Calculator</h1>
+          <p>A platform for calculating software quality metrics easily.</p>
+        </div>
+        <div class="image ">
+          <img src="../assets/welcome_metrics.png" alt="Welcome Image" />
+        </div>
       </div>
-      <div class="image ">
-        <img src="../assets/welcome_metrics.png" alt="Welcome Image" />
-      </div>
-    </div>
 
-    <!-- Bottom Section -->
-    <div class="section reverse glass">
-      <div class="image">
-        <img src="../assets/why_metrics.png" alt="Metrics Insight" />
-      </div>
-      <div class="text">
-        <h2>Why Use Software Metrics?</h2>
-        <p>
-          Software metrics play a crucial role in evaluating the quality, maintainability, and complexity of your codebase.
-          By measuring aspects like complexity, dependency, documentation, and defects, developers can make informed
-          decisions about where to refactor, what to test, and how to optimize. Tracking these metrics helps maintain clean,
-          efficient, and scalable software over time.
-        </p>
+      <!-- Bottom Section -->
+      <div class="section reverse glass">
+        <div class="image">
+          <img src="../assets/why_metrics.png" alt="Metrics Insight" />
+        </div>
+        <div class="text">
+          <h2>Why Use Software Metrics?</h2>
+          <p>
+            Software metrics play a crucial role in evaluating the quality, maintainability, and complexity of your
+            codebase.
+            By measuring aspects like complexity, dependency, documentation, and defects, developers can make informed
+            decisions about where to refactor, what to test, and how to optimize. Tracking these metrics helps maintain
+            clean,
+            efficient, and scalable software over time.
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -43,6 +47,7 @@ export default {
   flex-direction: column;
   gap: 60px;
   padding: 60px 40px;
+  background-color: #fefffe;
 }
 
 .section {
@@ -51,6 +56,7 @@ export default {
   align-items: center;
   flex-wrap: nowrap;
   gap: 40px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .section.reverse {
@@ -58,6 +64,7 @@ export default {
 }
 
 @media (max-width: 768px) {
+
   .section,
   .section.reverse {
     flex-direction: column;
@@ -99,12 +106,16 @@ export default {
   position: relative;
   padding: 32px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);        /* subtle white tint */
-  border: 1px solid rgba(255, 255, 255, 0.25);   /* faint border */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);    /* soft depth */
+  background: rgba(255, 255, 255, 0.12);
+  /* subtle white tint */
+  border: 1px solid #ccc;
+  /* faint border */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* soft depth */
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
-  overflow: hidden;                              /* keeps children inside rounded corners */
+  overflow: hidden;
+  /* keeps children inside rounded corners */
 }
 
 
@@ -114,9 +125,4 @@ export default {
   height: auto;
   border-radius: 12px;
 }
-
-
-
-
-
 </style>

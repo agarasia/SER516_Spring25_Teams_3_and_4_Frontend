@@ -11,24 +11,6 @@
       into one cohesive web application.
     </p>
 
-    <h2>Integrated Services</h2>
-    <ul class="services">
-      <li>Lines&nbsp;of&nbsp;Code</li>
-      <li>Mean&nbsp;Time&nbsp;to&nbsp;Resolve</li>
-      <li>Code&nbsp;Churn</li>
-      <li>Defects Over Time</li>
-      <li>Defects Stats</li>
-      <li>Cyclomatic&nbsp;Complexity</li>
-      <li>Halstead&nbsp;Metrics</li>
-      <li>Instability/Coupling&nbsp;Index</li>
-      <li>AfferentCoupling</li>
-      <li>DefectDensity</li>
-      <li>DefectScore</li>
-      <li>EfferentCoupling</li>
-      <li>LCOM4</li>
-      <li>LCOMHS</li>
-    </ul>
-
     <h2>Architecture Snapshot</h2>
     <p>
       Every service runs as a container on <code>analysis-network</code> and
@@ -50,13 +32,13 @@ export default {
 <style scoped>
 /* glass-card wrapper (matches landing-page style) */
 .about {
-  max-width: 900px;
+  width: 80vw;
   margin: 60px auto;
   padding: 48px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  background: #fefffe;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
   color: #000;
@@ -103,6 +85,7 @@ export default {
   margin-top: 30px;
   text-align: center;
 }
+
 .image img {
   max-width: 100%;
   height: auto;
