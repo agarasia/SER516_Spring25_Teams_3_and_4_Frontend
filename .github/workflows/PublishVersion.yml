@@ -27,11 +27,9 @@ jobs:
         id: vars
         run: echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-      - name: Change directory to FrontEnd
-        run: cd FrontEnd
-
       - name: Build and tag Docker image
         run: |
+          cd FrontEnd
           IMAGE_NAME=${DOCKERHUB_USERNAME}/app-frontend:${RELEASE_TAG}
           docker build \
             -t "$IMAGE_NAME" \
