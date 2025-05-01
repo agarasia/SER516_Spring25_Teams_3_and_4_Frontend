@@ -9,7 +9,7 @@ COPY . .
 RUN npm run build              
 # produces dist/ folder
 
-FROM nginx:1.27-alpine-slim
+FROM nginx:1.28-alpine-slim
 # tiny, battle‑tested static server
 
 COPY --from=builder /app/dist /usr/share/nginx/html
