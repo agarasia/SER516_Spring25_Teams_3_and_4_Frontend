@@ -46,6 +46,7 @@
                 <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
                 Defects Stats
             </label>
+
         </div>
       </div>
 
@@ -176,23 +177,23 @@ export default {
         errorMessages.githubUrl = 'Valid GitHub Repository.';
         // Finally, add repo to shared volume.
         const req = githubUrl.value.toLowerCase();
-        const res = await axios.post(
-          'http://localhost:8080/add_repo',
-          { repo_url: req },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              mode: 'cors',
-            },
-          }
-        );
-        console.log('Response from backend:', res.data);
-        if (res.status === 200) {
-          console.log('Repository added successfully.');
-        } else {
-          console.error('Failed to add repository.');
-        }
+         const res = await axios.post(
+           'http://localhost:8080/add_repo',
+           { repo_url: req },
+           {
+             headers: {
+               'Content-Type': 'application/json',
+               'Access-Control-Allow-Origin': '*',
+               mode: 'cors',
+             },
+           }
+         );
+         console.log('Response from backend:', res.data);
+         if (res.status === 200) {
+           console.log('Repository added successfully.');
+         } else {
+           console.error('Failed to add repository.');
+         }
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
@@ -219,30 +220,53 @@ export default {
       try {
         const metrics = selectedMetrics.value;
         const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
+
         const { data } = await axios.get(req);
+        console.log('Response from backend:', data);
         const transformed = {};
         (data.metrics_data ?? []).forEach(group => {
-          if (Array.isArray(group.cc) && group.cc.length) {
-            const cc = group.cc[0];
+            if (Array.isArray(group.cc) && group.cc.length) {
+                
+            const cc = group.cc;
+            let dates = [];
+            let added_lines_list = [];
+            let deleted_lines_list = [];
+            let modified_lines_list = [];
+            let total_commits_list = [];
+            for (let i = 0; i < cc.length; i++) {
+              added_lines_list.push(cc[i].data.added_lines);
+              deleted_lines_list.push(cc[i].data.deleted_lines);
+              modified_lines_list.push(cc[i].data.modified_lines);
+              total_commits_list.push(cc[i].data.total_commits);
+              dates.push(cc[i].timestamp);
+            }
+
             transformed.CC = {
-              timestamp: cc.timestamp ?? Date.now(),
+              timestamp: dates.reverse(),
               data: {
-                added_lines: cc.data.added_lines,
-                deleted_lines: cc.data.deleted_lines,
-                modified_lines: cc.data.modified_lines,
-                total_commits: cc.data.total_commits
+                added_lines: added_lines_list.reverse(),
+                deleted_lines: deleted_lines_list.reverse(),
+                modified_lines: modified_lines_list.reverse(),
+                total_commits: total_commits_list.reverse()
               }
             };
           }
 
           if (Array.isArray(group.ici) && group.ici.length) {
-            const ici = group.ici[0];
-
+            const ici = group.ici;
+            let dates = [];
+            let ici_score_list = [];
+            let repo_size_list = [];
+            for (let i = 0; i < ici.length; i++) {
+              ici_score_list.push(ici[i].data.ici_score);
+              repo_size_list.push(ici[i].data.repo_size_mb);
+              dates.push(ici[i].timestamp);
+            }
             transformed.ICI = {
-              timestamp: ici.timestamp ?? Date.now(),
+              timestamp: dates.reverse(),
               data: {
-                iCI_score: ici.data.ici_score,
-                repo_size_in_mB: ici.data.repo_size_mb
+                iCI_score: ici_score_list.reverse(),
+                repo_size_in_mB: repo_size_list.reverse()
               }
             };
           }
@@ -269,27 +293,44 @@ export default {
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
 
-            const defects = group['defects-over-time'][0];
+            const defects = group['defects-over-time'];
+            let dates = [];
+            let defect_closure_rate_list = [];
+            let defect_discovery_rate_list = [];
+            let open_issues_list = [];
+            let completed_issues_list = [];
+            let total_issues_list = [];
+            for (let i = 0; i < defects.length; i++) {
+              defect_closure_rate_list.push(defects[i].data.defect_closure_rate_last_30_days);
+              defect_discovery_rate_list.push(defects[i].data.defect_discovery_rate_last_30_days);
+              open_issues_list.push(defects[i].data.open_issues);
+              completed_issues_list.push(defects[i].data.completed_issues);
+              total_issues_list.push(defects[i].data.total_issues);
+              dates.push(defects[i].timestamp);
+            }
             transformed.DefectsOverTime = {
-              timestamp: group['defects-over-time'].timestamp ?? Date.now(),
+              timestamp: dates.reverse(),
               data: {
-                avg_time_to_close: defects.data.average_time_to_close,
-                completed_issues: defects.data.completed_issues,
-                defect_closure_rate_30d: defects.data.defect_closure_rate_last_30_days,
-                defect_discovery_rate_30d: defects.data.defect_discovery_rate_last_30_days,
-                open_issues: defects.data.open_issues,
-                percent_completed: defects.data.percent_completed,
-                total_issues: defects.data.total_issues
+                defect_closure_rate_30d: defect_closure_rate_list.reverse(),
+                defect_discovery_rate_30d: defect_discovery_rate_list.reverse(),
+                open_issues: open_issues_list.reverse(),
+                completed_issues: completed_issues_list.reverse(),
+                total_issues: total_issues_list.reverse()
               }
             };
           }
 
           if (Array.isArray(group.loc) && group.loc.length) {
-            const loc = group.loc[0];
+            const loc = group.loc;
+            let dates = [];
+            const extractedData = loc.map(item => item.data);
 
+            for (let i = 0; i < loc.length; i++) {
+              dates.push(loc[i].timestamp);
+            }
             transformed.LOC = {
-              timestamp: loc.timestamp ?? Date.now(),
-              data: loc.data
+              timestamp: dates.reverse(),
+              data: extractedData.reverse()
             };
           }
 
