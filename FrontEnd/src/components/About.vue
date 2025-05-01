@@ -1,26 +1,28 @@
 <template>
-  <section class="about glass">
-    <h1>About Metric&nbsp;Calculator</h1>
+  <div style="background-color: #f4f4f5; overflow-y: auto;">
+    <section class="about glass">
+      <h1>About Metric&nbsp;Calculator</h1>
 
-    <p>
-      <strong>Metric Calculator</strong> is the Spring&nbsp;2025 project for
-      <em>SER 516: Software Agility</em> at Arizona State University.
-      The course began with 4-person sub-teams, each building a single
-      metric as an independent <em>micro-service</em>.
-      In the final period the entire class merged those services
-      into one cohesive web application.
-    </p>
+      <p>
+        <strong>Metric Calculator</strong> is the Spring&nbsp;2025 project for
+        <em>SER 516: Software Agility</em> at Arizona State University.
+        The course began with 4-person sub-teams, each building a single
+        metric as an independent <em>micro-service</em>.
+        In the final period the entire class merged those services
+        into one cohesive web application.
+      </p>
 
-    <h2>Architecture Snapshot</h2>
-    <p>
-      Every service runs as a container on <code>analysis-network</code> and
-      mounts the shared repository volume <code>shared-repos</code>.
-      The UI calls an API-gateway that orchestrates the individual workers.
-    </p>
-    <div class="image">
-      <img src="../assets/Architecture_image.png" alt="Metrics Architecture" />
-    </div>
-  </section>
+      <h2>Architecture Snapshot</h2>
+      <p>
+        Every service runs as a container on <code>analysis-network</code> and
+        mounts the shared repository volume <code>shared-repos</code>.
+        The UI calls an API-gateway that orchestrates the individual workers.
+      </p>
+      <div class="image">
+        <img src="../assets/Architecture_image.png" alt="Metrics Architecture" />
+      </div>
+    </section>
+  </div>
 </template>
 
 <script lang="ts">
@@ -33,9 +35,9 @@ export default {
 /* glass-card wrapper (matches landing-page style) */
 .about {
   width: 80vw;
-  margin: 60px auto;
+  margin: 3em auto;
   padding: 48px;
-  border-radius: 20px;
+  border-radius: 10px;
   background: #fefffe;
   border: 1px solid #ccc;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

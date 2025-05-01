@@ -1,137 +1,111 @@
 <template>
-  <!-- <header v-if="!showOutput">
-    <h1>Software Quality Metric Calculator</h1>
-  </header> -->
-  <main>
+  <div style="background-color: #f4f4f5;overflow-y: auto; margin-bottom: 2em;">
     <!-- Show Input Form if OutputView or BenchmarkDialog is Hidden -->
-    <div v-if="!showOutput && !showBenchmarkDialog">
-      <div class="input-container1">
+    <div v-if="!showOutput && !showBenchmarkDialog" class="container-wrapper" style="background-color: #f4f4f5;">
+      <div class="input-container1"
+        style="background-color: #fefffe; border: 1px solid #ccc;padding: 4em 4em; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
         <p>To assess the quality trends of your repository, please enter the Repository URL and then click Calculate. If
           we do not have any data for the entered repository URL, then it may take some time to compute and assess
           historical data.</p>
         <label for="github-url">Enter GitHub Repository URL:</label>
         <input type="text" id="github-url" v-model="githubUrl" placeholder="https://github.com/user/repository"
           @keyup.enter="checkGitHubRepoExists" />
-        <button v-if="!isValidRepo" @click="checkGitHubRepoExists">Validate your URL</button>
+        <button v-if="!isValidRepo" @click="checkGitHubRepoExists" style="margin-top: 1em; margin-bottom: 1em;">Validate
+          your
+          URL</button>
         <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
           {{ errorMessages.githubUrl }}
         </p>
-        <div class="metric-selection">
-            <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
-            <label>
-                <input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
-                Cyclomatic Complexity
-            </label>
-            <label>
-                <input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
-                Halstead
-            </label>
-            <label>
-                <input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
-                Code
-            </label>
-            <label>
-                <input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
-                       @change="handleMetricChange" /> Defects Over Time
-            </label>
-            <label>
-                <input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
-                MTTR
-            </label>
-            <label>
-                <input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
-                ICI
-            </label>
-            <label>
-                <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
-                Defects Stats
-            </label>
+        <div class="metric-selection" v-if="isValidRepo">
+          <h4>Select Metrics to Calculate:</h4>
+          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
+          <label>
+            <input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+            Cyclomatic Complexity
+          </label>
+          <label>
+            <input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
+            Halstead
+          </label>
+          <label>
+            <input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+            Code
+          </label>
+          <label>
+            <input type="checkbox" value="defects-over-time" v-model="selectedMetrics" @change="handleMetricChange" />
+            Defects Over Time
+          </label>
+          <label>
+            <input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
+            MTTR
+          </label>
+          <label>
+            <input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+            ICI
+          </label>
+          <label>
+            <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
+            Defects Stats
+          </label>
 
-            <label>
-                <input type="checkbox" value="fogindex" v-model="selectedMetrics" @change="handleMetricChange" />
-                Fog Index
-            </label>
-            <label>
-                <input type="checkbox" value="lcom4" v-model="selectedMetrics" @change="handleMetricChange" />
-                LCOM4
-            </label>
+          <label>
+            <input type="checkbox" value="fogindex" v-model="selectedMetrics" @change="handleMetricChange" />
+            Fog Index
+          </label>
+          <label>
+            <input type="checkbox" value="lcom4" v-model="selectedMetrics" @change="handleMetricChange" />
+            LCOM4
+          </label>
 
 
-            <label>
-                <input type="checkbox" value="lcomhs" v-model="selectedMetrics" @change="handleMetricChange" />
-                LCOMHS
-            </label>
+          <label>
+            <input type="checkbox" value="lcomhs" v-model="selectedMetrics" @change="handleMetricChange" />
+            LCOMHS
+          </label>
 
         </div>
+        <div class="calculate-button" style="margin-top: 1em;">
+          <button @click="submitData" :disabled="!isValidRepo">
+            {{ buttonText }}
+          </button>
+        </div>
       </div>
-
-
-
-      <br />
-      <br />
-      <!-- <div class="container-wrapper">
-      <div class="input-container2" v-if="isValidRepo">
-        <label>All metrics will be calculated automatically.</label>
-      </div>
-      <br />
-      <br /> -->
-      <button @click="submitData" :disabled="!isValidRepo">
-        {{ buttonText }}
-      </button>
-      <h4 class="loading-text" v-if="isLoading">
-        Please Wait, your metrics are being computed.<br />
-        The larger the repo, the longer the time.
-      </h4>
     </div>
 
     <!-- Benchmark Input Dialog -->
     <div v-if="showBenchmarkDialog" class="dialog-overlay">
       <div class="dialog">
         <h4>
-          For each metric, you can optionally enter a benchmark score in the input box and choose whether to display it
-          on the chart by checking or unchecking the checkbox for that metric.
+          PLEASE NOTE
         </h4>
+        <p>When running the metrics for the first time, the system will not have any data. In that case, it will compute
+          the metrics based on the latest available data. This is done in tandem with verification of GitHub URL and its
+          addition to shared volume. Consequently, the visualizations would contain only one
+          data point.<br><br>
+          If you want to see the visualizations with historical data, please try again at later time.</p>
         <br />
-        <div class="benchmark-container">
-          <div v-for="metric in availableMetrics" :key="metric.value" class="benchmark-item">
-            <div class="label-input-container">
-              <label :for="`benchmark-${metric.value}`">
-                {{ metric.label }} Benchmark:
-              </label>
-              <input type="number" :id="`benchmark-${metric.value}`"
-                v-model.number="benchmarkInputs[metric.benchmarkKey]"
-                :placeholder="`Enter ${metric.label} benchmark`" />
-            </div>
-          </div>
-        </div>
         <div class="button-container">
-          <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
+          <button @click="handleBenchmarkSubmit()">I understand</button>
         </div>
-    </div>
+      </div>
 
       <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
         v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
 
     </div>
     <!-- Show Output Screen After Validation -->
-    <OutputView
-      :computedData="computedData"
-      :benchmarks="benchmarks"
-      :showBenchmarkLines="showBenchmarkLines"
-      v-if="showOutput"
-      @goBack="showFormAgain"
-      @updateBenchmarks="postBenchmarks"
-    />
+    <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
     <LoadingSpinner v-if="isLoading" />
 
-  </main>
-  <!-- Footer Section -->
+  </div>
+  <!-- Footer Section
   <footer class="footer" v-if="!showOutput">
     <p>&copy; 2025 Metric Calculator. All rights reserved.</p>
     <p>
       Developed by: SER516 Class (Spring 2025)
     </p>
-  </footer>
+  </footer> -->
 </template>
 
 <script lang="ts">
@@ -205,7 +179,7 @@ export default {
         if (!keys.includes('Java')) {
           errorMessages.githubUrl =
             'The repository does not have a Java project.';
-            isLoading.value = false;
+          isLoading.value = false;
           return;
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
@@ -308,35 +282,35 @@ export default {
             };
           }
 
-        if (Array.isArray(group.mttr) && group.mttr.length) {
+          if (Array.isArray(group.mttr) && group.mttr.length) {
             const mttrArr = group.mttr;
 
             const dates: number[] = [];
             const mttrValues: number[] = [];
 
             mttrArr.forEach(item => {
-                let value = 0.0;
+              let value = 0.0;
 
-                if (
-                    item.data &&
-                    typeof item.data === 'object' &&
-                    item.data.error === null &&
-                    typeof item.data.mttr === 'number'
-                ) {
-                    value = item.data.mttr;                                     
-                }
+              if (
+                item.data &&
+                typeof item.data === 'object' &&
+                item.data.error === null &&
+                typeof item.data.mttr === 'number'
+              ) {
+                value = item.data.mttr;
+              }
 
-                dates.push(item.timestamp);                                   
-                mttrValues.push(value);                                        
+              dates.push(item.timestamp);
+              mttrValues.push(value);
             });
 
             transformed.MTTR = {
-                timestamp: dates.reverse(),
-                data: {
-                    score: mttrValues.reverse()
-                }
+              timestamp: dates.reverse(),
+              data: {
+                score: mttrValues.reverse()
+              }
             };
-        }
+          }
 
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
@@ -426,103 +400,103 @@ export default {
             console.log('Halstead:', transformed.Halstead);
           }
 
-           if (Array.isArray(group['defects-stats']) && group['defects-stats'].length) {
-                const stats = group['defects-stats'];
+          if (Array.isArray(group['defects-stats']) && group['defects-stats'].length) {
+            const stats = group['defects-stats'];
 
-                const dates = [];
-                const percentages = [];
+            const dates = [];
+            const percentages = [];
 
-                for (let i = 0; i < stats.length; i++) {
-                    const entry = stats[i];
-                    const dataBlock = Array.isArray(entry.data) ? entry.data[0] : null;
+            for (let i = 0; i < stats.length; i++) {
+              const entry = stats[i];
+              const dataBlock = Array.isArray(entry.data) ? entry.data[0] : null;
 
-                    if (dataBlock && typeof dataBlock.percentageBugsClosed === 'number') {
-                        percentages.push(dataBlock.percentageBugsClosed);
-                        dates.push(entry.timestamp);
-                    }
-                }
-
-                if (dates.length > 0 && percentages.length > 0) {
-                    transformed.DefectsStats = {
-                        timestamp: dates.reverse(),
-                        data: percentages.reverse()
-                    };
-                }
-            }
-            if (Array.isArray(group.lcom4) && group.lcom4.length) {
-                const dates = [];
-                const scores = [];
-
-                group.lcom4.forEach(entry => {
-                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
-                    if (scoreObj && typeof scoreObj.score === 'number') {
-                        dates.push(entry.timestamp);
-                        scores.push(scoreObj.score);
-                    }
-                });
-
-                if (dates.length) {
-                    transformed.LCOM4 = {
-                        timestamp: dates.reverse(),
-                        data: scores.reverse()   
-                    };
-                }
+              if (dataBlock && typeof dataBlock.percentageBugsClosed === 'number') {
+                percentages.push(dataBlock.percentageBugsClosed);
+                dates.push(entry.timestamp);
+              }
             }
 
-            if (Array.isArray(group.lcomhs) && group.lcomhs.length) {
-                const dates = [];
-                const scores = [];
-
-                group.lcomhs.forEach(entry => {
-                    const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
-                    if (scoreObj && typeof scoreObj.score === 'number') {
-                        dates.push(entry.timestamp);
-                        scores.push(scoreObj.score);
-                    }
-                });
-
-                if (dates.length) {
-                    transformed.LCOMHS = {
-                        timestamp: dates.reverse(),
-                        data: scores.reverse()
-                    };
-                }
+            if (dates.length > 0 && percentages.length > 0) {
+              transformed.DefectsStats = {
+                timestamp: dates.reverse(),
+                data: percentages.reverse()
+              };
             }
+          }
+          if (Array.isArray(group.lcom4) && group.lcom4.length) {
+            const dates = [];
+            const scores = [];
 
-            if (Array.isArray(group.fogindex) && group.fogindex.length) {
-                const fogArr = group.fogindex;
+            group.lcom4.forEach(entry => {
+              const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+              if (scoreObj && typeof scoreObj.score === 'number') {
+                dates.push(entry.timestamp);
+                scores.push(scoreObj.score);
+              }
+            });
 
-                const dates = [];
-                const fogindexactual = []
-                const pctComplexWordsList = [];
-                const totalFilesList = [];
-                const avgSentenceLengthList = [];
-                const fogIndexVal = []
-
-                fogArr.forEach(item => {
-                    const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
-
-                    dates.push(item.timestamp);     
-                    fogindexactual.push(d.fogIndex);
-                    pctComplexWordsList.push(d.percentageComplexWords);
-                    totalFilesList.push(d.totalFiles);
-                    avgSentenceLengthList.push(d.averageSentenceLength);
-                    fogIndexVal.push(d.fogIndex);
-                });
-
-                transformed.FogIndex = {
-                    timestamp: dates.reverse(),
-                    data: {
-                        fog_index: fogindexactual.reverse(),
-                        pct_complex_words: pctComplexWordsList.reverse(),
-                        total_files: totalFilesList.reverse(),
-                        avg_sentence_length: avgSentenceLengthList.reverse(),
-                        fog_index: fogIndexVal.reverse()
-                    }
-                };
-
-
+            if (dates.length) {
+              transformed.LCOM4 = {
+                timestamp: dates.reverse(),
+                data: scores.reverse()
+              };
             }
+          }
+
+          if (Array.isArray(group.lcomhs) && group.lcomhs.length) {
+            const dates = [];
+            const scores = [];
+
+            group.lcomhs.forEach(entry => {
+              const scoreObj = Array.isArray(entry.data) ? entry.data[0] : null;
+              if (scoreObj && typeof scoreObj.score === 'number') {
+                dates.push(entry.timestamp);
+                scores.push(scoreObj.score);
+              }
+            });
+
+            if (dates.length) {
+              transformed.LCOMHS = {
+                timestamp: dates.reverse(),
+                data: scores.reverse()
+              };
+            }
+          }
+
+          if (Array.isArray(group.fogindex) && group.fogindex.length) {
+            const fogArr = group.fogindex;
+
+            const dates = [];
+            const fogindexactual = []
+            const pctComplexWordsList = [];
+            const totalFilesList = [];
+            const avgSentenceLengthList = [];
+            const fogIndexVal = []
+
+            fogArr.forEach(item => {
+              const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
+
+              dates.push(item.timestamp);
+              fogindexactual.push(d.fogIndex);
+              pctComplexWordsList.push(d.percentageComplexWords);
+              totalFilesList.push(d.totalFiles);
+              avgSentenceLengthList.push(d.averageSentenceLength);
+              fogIndexVal.push(d.fogIndex);
+            });
+
+            transformed.FogIndex = {
+              timestamp: dates.reverse(),
+              data: {
+                fog_index: fogindexactual.reverse(),
+                pct_complex_words: pctComplexWordsList.reverse(),
+                total_files: totalFilesList.reverse(),
+                avg_sentence_length: avgSentenceLengthList.reverse(),
+                fog_index: fogIndexVal.reverse()
+              }
+            };
+
+
+          }
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
             const cD = group.cyclo;
             let keys = [];
@@ -647,30 +621,13 @@ export default {
 </script>
 
 <style scoped>
-header {
-  background: linear-gradient(to right, #09203f, #537895);
-  padding: px;
-  text-align: center;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  border-radius: 0;
-  width: 100%;
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  z-index: 1000;
-}
-
-footer {
-  flex-shrink: 0;
-  background: linear-gradient(to right, #09203f, #537895);
-  color: #fff;
-  text-align: center;
-  padding: 10px 0;
-  font-size: 10px;
-  font-weight: bold;
+.container-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 100px);
+  margin-top: -40px;
 }
 
 @media (min-height: 700px) {
