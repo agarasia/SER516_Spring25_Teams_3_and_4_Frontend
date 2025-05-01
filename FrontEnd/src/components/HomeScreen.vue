@@ -415,6 +415,7 @@ export default {
                 const pctComplexWordsList = [];
                 const totalFilesList = [];
                 const avgSentenceLengthList = [];
+                const fogIndexVal = []
 
                 fogArr.forEach(item => {
                     const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
@@ -423,6 +424,7 @@ export default {
                     pctComplexWordsList.push(d.percentageComplexWords);
                     totalFilesList.push(d.totalFiles);
                     avgSentenceLengthList.push(d.averageSentenceLength);
+                    fogIndexVal.push(d.fogIndex);
                 });
 
                 transformed.FogIndex = {
@@ -430,7 +432,8 @@ export default {
                     data: {
                         pct_complex_words: pctComplexWordsList.reverse(),
                         total_files: totalFilesList.reverse(),
-                        avg_sentence_length: avgSentenceLengthList.reverse()
+                        avg_sentence_length: avgSentenceLengthList.reverse(),
+                        fog_index: fogIndexVal.reverse()
                     }
                 };
 
