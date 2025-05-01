@@ -193,8 +193,7 @@ export default {
           }
         }
       }
-
-      return data;
+      return JSON.parse(JSON.stringify(data));
     }
 
     // Reactive/computed graph data
@@ -203,6 +202,7 @@ export default {
     function getChartData(metricValue) {
       const labels = graphLabels.value[metricValue];
       const data = graphData.value[metricValue];
+      console.log('Graph Data:', data);
       let datasets = [];
 
       // Predefined list of colors
@@ -219,8 +219,8 @@ export default {
       for (let i = 0; i < labels.length; i++) {
         const colorIndex = i % colors.length;
         datasets.push({
-          label: [labels[i]],
-          data: [data[i]],
+          label: labels[i],
+          data: data[i],
           fill: false,
           borderColor: colors[colorIndex].borderColor,
           backgroundColor: colors[colorIndex].backgroundColor,
@@ -228,7 +228,7 @@ export default {
         });
       }
       return {
-        labels: timestamps.value,
+        labels: timestamps.value[0],
         datasets: datasets
       };
     }
