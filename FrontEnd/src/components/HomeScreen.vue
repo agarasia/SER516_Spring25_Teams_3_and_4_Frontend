@@ -17,36 +17,6 @@
           {{ errorMessages.githubUrl }}
         </p>
         <div class="metric-selection">
-          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> CC</label>
-          <label>
-            <input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
-            Cyclomatic Complexity
-          </label>
-          <label>
-            <input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" />
-            Halstead
-          </label>
-          <label>
-            <input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
-            Code
-          </label>
-          <label>
-            <input type="checkbox" value="defects-over-time" v-model="selectedMetrics" @change="handleMetricChange" />
-            Defects Over Time
-          </label>
-          <label>
-            <input type="checkbox" value="mttr" v-model="selectedMetrics" @change="handleMetricChange" />
-            MTTR
-          </label>
-          <label>
-            <input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
-            ICI
-          </label>
-          <label>
-            <input type="checkbox" value="defects-stats" v-model="selectedMetrics" @change="handleMetricChange" />
-            Defects Stats
-          </label>
-
           <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> Code
             Churn</label>
           <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
