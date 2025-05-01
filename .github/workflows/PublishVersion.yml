@@ -12,7 +12,7 @@ env:
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
-  publish-middleware:
+  publish-frontend:
     environment: dockerhub
     runs-on: ubuntu-latest
     steps:
@@ -27,12 +27,15 @@ jobs:
         id: vars
         run: echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
+      - name: Change directory to FrontEnd
+        run: cd FrontEnd
+
       - name: Build and tag Docker image
         run: |
           IMAGE_NAME=${DOCKERHUB_USERNAME}/app-frontend:${RELEASE_TAG}
           docker build \
             -t "$IMAGE_NAME" \
-            -f FrontEnd/dockerfile \
+            -f dockerfile \
             .
 
       - name: Push Docker image
