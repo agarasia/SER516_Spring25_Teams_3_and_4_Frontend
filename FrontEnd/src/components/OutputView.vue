@@ -91,7 +91,10 @@ export default {
       { value: 'MTTR', label: 'Mean Time to Repair', dataDict: false },
       { value: 'DefectsOverTime', label: 'Defects Over Time', dataDict: true },
       { value: 'Cyclo', label: 'Cyclomatic Complexity', dataDict: true },
-      { value: 'Halstead', label: 'Halstead Complexity', dataDict: true }
+      { value: 'Halstead', label: 'Halstead Complexity', dataDict: true },
+      { value: 'DefectsStats', label: 'Defects Stats', dataDict: true }, 
+      { value: 'FogIndex', label: 'Fog Index', dataDict: true }
+
     ];
 
     // Filter metrics based on availability in computedData
@@ -156,13 +159,11 @@ export default {
         if (m.dataDict) {
           const metricData = props.computedData[m.value];
           if (metricData && metricData.data && typeof metricData.data === 'object') {
-            // Format each key: replace _ with space and capitalize words
             labels[m.value] = Object.keys(metricData.data).map(formatLabel);
           } else {
             labels[m.value] = [];
           }
         } else {
-          // For non-dictionary metrics, format the metric label as well
           labels[m.value] = [formatLabel(m.label)];
         }
       }

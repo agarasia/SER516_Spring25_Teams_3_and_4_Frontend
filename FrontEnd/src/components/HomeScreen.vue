@@ -47,6 +47,11 @@
                 Defects Stats
             </label>
 
+            <label>
+                <input type="checkbox" value="fogindex" v-model="selectedMetrics" @change="handleMetricChange" />
+                Fog Index
+            </label>
+
         </div>
       </div>
 
@@ -379,7 +384,58 @@ export default {
                 };
             }
 
+           if (Array.isArray(group['defects-stats']) && group['defects-stats'].length) {
+                const stats = group['defects-stats'];
 
+                const dates = [];
+                const percentages = [];
+
+                for (let i = 0; i < stats.length; i++) {
+                    const entry = stats[i];
+                    const dataBlock = Array.isArray(entry.data) ? entry.data[0] : null;
+
+                    if (dataBlock && typeof dataBlock.percentageBugsClosed === 'number') {
+                        percentages.push(dataBlock.percentageBugsClosed);
+                        dates.push(entry.timestamp);
+                    }
+                }
+
+                if (dates.length > 0 && percentages.length > 0) {
+                    transformed.DefectsStats = {
+                        timestamp: dates.reverse(),
+                        data: percentages.reverse()
+                    };
+                }
+            }
+
+            if (Array.isArray(group.fogindex) && group.fogindex.length) {
+                const fogArr = group.fogindex;
+
+                const dates = [];
+                const pctComplexWordsList = [];
+                const totalFilesList = [];
+                const avgSentenceLengthList = [];
+
+                fogArr.forEach(item => {
+                    const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
+
+                    dates.push(item.timestamp);                        
+                    pctComplexWordsList.push(d.percentageComplexWords);
+                    totalFilesList.push(d.totalFiles);
+                    avgSentenceLengthList.push(d.averageSentenceLength);
+                });
+
+                transformed.FogIndex = {
+                    timestamp: dates.reverse(),
+                    data: {
+                        pct_complex_words: pctComplexWordsList.reverse(),
+                        total_files: totalFilesList.reverse(),
+                        avg_sentence_length: avgSentenceLengthList.reverse()
+                    }
+                };
+
+
+            }
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
             const cyclo = group.cyclo;
               let metrics = {};
