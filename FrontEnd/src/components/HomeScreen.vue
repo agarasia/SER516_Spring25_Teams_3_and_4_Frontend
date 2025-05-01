@@ -16,14 +16,30 @@
         <p v-if="errorMessages.githubUrl" :class="{ error: !isValidRepo, success: isValidRepo }">
           {{ errorMessages.githubUrl }}
         </p>
+        <div class="metric-selection">
+          <label><input type="checkbox" value="cc" v-model="selectedMetrics" @change="handleMetricChange" /> Code
+            Churn</label>
+          <label><input type="checkbox" value="loc" v-model="selectedMetrics" @change="handleMetricChange" /> Lines of
+            Code</label>
+          <label><input type="checkbox" value="hal" v-model="selectedMetrics" @change="handleMetricChange" /> Halstead
+            Metrics</label>
+          <label><input type="checkbox" value="cyclo" v-model="selectedMetrics" @change="handleMetricChange" />
+            Cyclomatic
+            Complexity</label>
+          <label><input type="checkbox" value="defects-over-time" v-model="selectedMetrics"
+              @change="handleMetricChange" /> Defects Over Time</label>
+          <label><input type="checkbox" value="ici" v-model="selectedMetrics" @change="handleMetricChange" />
+            ICI</label>
+        </div>
       </div>
+
+
 
       <br />
       <br />
       <!-- <div class="container-wrapper">
-        <div class="input-container2" v-if="isValidRepo">
-          <label>All metrics will be calculated automatically.</label>
-        </div>
+      <div class="input-container2" v-if="isValidRepo">
+        <label>All metrics will be calculated automatically.</label>
       </div>
       <br />
       <br /> -->
@@ -56,13 +72,15 @@
             </div>
           </div>
         </div>
-      </div>
-
       <div class="button-container">
         <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
       </div>
     </div>
 
+      <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
+      </div>
+    </div>
     <!-- Show Output Screen After Validation -->
     <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
       v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
@@ -87,6 +105,7 @@ export default {
   components: { TagInput, OutputView },
   setup() {
     const githubUrl = ref('');
+    const selectedMetrics = ref([]);
     const errorMessages = reactive({ githubUrl: '' });
     const showOutput = ref(false);
     const isValidRepo = ref(false);
@@ -101,43 +120,6 @@ export default {
     const buttonText = ref('Calculate');
     const isLoading = ref(false);
 
-    const availableMetrics = [
-      {
-        value: 'LCOM4',
-        label: 'LCOM4',
-        benchmarkKey: 'lcom4_benchmark',
-      },
-      {
-        value: 'LCOMHS',
-        label: 'LCOMHS',
-        benchmarkKey: 'lcomhs_benchmark',
-      },
-      {
-        value: 'DefectScore',
-        label: 'Defect Score',
-        benchmarkKey: 'defect_score_benchmark',
-      },
-      {
-        value: 'AfferentCoupling',
-        label: 'Afferent Coupling',
-        benchmarkKey: 'afferent_coupling_benchmark',
-      },
-      {
-        value: 'EfferentCoupling',
-        label: 'Efferent Coupling',
-        benchmarkKey: 'efferent_coupling_benchmark',
-      },
-      {
-        value: 'DefectDensityAnalysis',
-        label: 'Defect Density Analysis',
-        benchmarkKey: 'defect_density_analysis_benchmark',
-      },
-      {
-        value: 'Instability',
-        label: 'Instability',
-        benchmarkKey: 'instability_benchmark',
-      },
-    ];
 
     const isValidGitHubUrl = (url) => {
       const regex = /^https:\/\/github\.com\/[\w-]+\/[\w-]+\/?$/;
@@ -174,8 +156,8 @@ export default {
           return;
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
-        // Finally, add repo to shared volume.
-        const req = githubUrl.value.toLowerCase();
+
+        const req = githubUrl.value;
         const res = await axios.post(
           'http://localhost:8080/add_repo',
           { repo_url: req },
@@ -205,7 +187,7 @@ export default {
 
       try {
         await calculateMetrics();
-        showBenchmarkDialog.value = true;
+        // showBenchmarkDialog.value = true;
       } catch (e) {
         console.error(e);
       } finally {
@@ -215,17 +197,220 @@ export default {
     };
 
     const calculateMetrics = async () => {
+
       try {
-        const metrics = "cc,cyclo,hal";
-        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
-        const response = await axios.get(req);
-        console.log('Response from backend:', response.data);
-        return true;
+        const metrics = selectedMetrics.value;
+        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`;
+        const { data } = await axios.get(req);
+        console.log('Response from backend:', data);
+        const transformed = {};
+        (data.metrics_data ?? []).forEach(group => {
+          if (Array.isArray(group.cc) && group.cc.length) {
+
+            const cc = group.cc;
+            let dates = [];
+            let added_lines_list = [];
+            let deleted_lines_list = [];
+            let modified_lines_list = [];
+            let total_commits_list = [];
+            for (let i = 0; i < cc.length; i++) {
+              added_lines_list.push(cc[i].data.added_lines);
+              deleted_lines_list.push(cc[i].data.deleted_lines);
+              modified_lines_list.push(cc[i].data.modified_lines);
+              total_commits_list.push(cc[i].data.total_commits);
+              dates.push(cc[i].timestamp);
+            }
+
+            transformed.CC = {
+              timestamp: dates.reverse(),
+              data: {
+                added_lines: added_lines_list.reverse(),
+                deleted_lines: deleted_lines_list.reverse(),
+                modified_lines: modified_lines_list.reverse(),
+                total_commits: total_commits_list.reverse()
+              }
+            };
+          }
+
+          if (Array.isArray(group.ici) && group.ici.length) {
+            const ici = group.ici;
+            let dates = [];
+            let ici_score_list = [];
+            let repo_size_list = [];
+            for (let i = 0; i < ici.length; i++) {
+              ici_score_list.push(ici[i].data.ici_score);
+              repo_size_list.push(ici[i].data.repo_size_mb);
+              dates.push(ici[i].timestamp);
+            }
+            transformed.ICI = {
+              timestamp: dates.reverse(),
+              data: {
+                iCI_score: ici_score_list.reverse(),
+                repo_size_in_mB: repo_size_list.reverse()
+              }
+            };
+          }
+
+          // if (Array.isArray(group.mttr) && group.mttr.length) {
+          //   const mttr = group.mttr[0];
+
+          //   if (mttr.data
+          //     && typeof mttr.data === 'object'
+          //     && mttr.data.error === null
+          //     && typeof mttr.data.mttr === 'number') {
+          //     transformed.MTTR = {
+          //       timestamp: mttr.timestamp ?? Date.now(),
+          //       data: mttr.data.mttr
+          //     }
+          //   }
+          //   else {
+          //     transformed.MTTR = {
+          //       timestamp: mttr.timestamp ?? Date.now(),
+          //       data: 0.0
+          //     };
+          //   }
+          // }
+
+          if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
+
+            const defects = group['defects-over-time'];
+            let dates = [];
+            let defect_closure_rate_list = [];
+            let defect_discovery_rate_list = [];
+            let open_issues_list = [];
+            let completed_issues_list = [];
+            let total_issues_list = [];
+            for (let i = 0; i < defects.length; i++) {
+              defect_closure_rate_list.push(defects[i].data.defect_closure_rate_last_30_days);
+              defect_discovery_rate_list.push(defects[i].data.defect_discovery_rate_last_30_days);
+              open_issues_list.push(defects[i].data.open_issues);
+              completed_issues_list.push(defects[i].data.completed_issues);
+              total_issues_list.push(defects[i].data.total_issues);
+              dates.push(defects[i].timestamp);
+            }
+            transformed.DefectsOverTime = {
+              timestamp: dates.reverse(),
+              data: {
+                defect_closure_rate_30d: defect_closure_rate_list.reverse(),
+                defect_discovery_rate_30d: defect_discovery_rate_list.reverse(),
+                open_issues: open_issues_list.reverse(),
+                completed_issues: completed_issues_list.reverse(),
+                total_issues: total_issues_list.reverse()
+              }
+            };
+          }
+
+          if (Array.isArray(group.loc) && group.loc.length) {
+            const loc = group.loc;
+            let dates = [];
+            const extractedData = loc.map(item => item.data);
+
+            for (let i = 0; i < loc.length; i++) {
+              dates.push(loc[i].timestamp);
+            }
+            transformed.LOC = {
+              timestamp: dates.reverse(),
+              data: extractedData.reverse()
+            };
+          }
+
+          if (Array.isArray(group.hal) && group.hal.length) {
+            const halData = group.hal;
+            let keys = [];
+            let dates = [];
+            const sum = halData[0].data.find(e => e.Summary)?.Summary;
+            keys = Object.keys(sum);
+            let metrics = {};
+            console.log('Keys:', keys);
+
+            for (let i = 0; i < halData.length; i++) {
+              dates.push(halData[i].timestamp);
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = [];
+            }
+
+            const entry = halData[0].data.find(e => e.Summary)?.Summary;
+            for (let i = 0; i < halData.length; i++) {
+              const entry = halData[i].data.find(e => e.Summary)?.Summary;
+              for (let j = 0; j < keys.length; j++) {
+                const key = keys[j];
+                metrics[key].push(entry[key]);
+              }
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = metrics[key].reverse();
+            }
+
+            transformed.Halstead = {
+              timestamp: dates.reverse(),
+              data: {
+                difficulty: metrics['Total Difficulty'],
+                effort: metrics['Total Efforts'],
+                volume: metrics['Total Program Volume'],
+                vocabulary: metrics['Total Program Vocabulary'],
+                length: metrics['Total Program Length']
+              }
+            };
+            console.log('Halstead:', transformed.Halstead);
+          }
+
+          if (Array.isArray(group.cyclo) && group.cyclo.length) {
+            const cD = group.cyclo;
+            let keys = [];
+            let dates = [];
+            let Metrics = {};
+
+            for (let i = 0; i < cD.length; i++) {
+              dates.push(cD[i].timestamp);
+            }
+
+            cD[0].data.forEach(entry => {
+              for (const [key, value] of Object.entries(entry)) {
+                if (typeof value === 'number') {
+                  keys.push(key);
+                }
+              }
+            })
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = [];
+            }
+
+            for (let i = 0; i < cD.length; i++) {
+              const entry = cD[i].data;
+              for (let j = 0; j < entry.length; j++) {
+                const key = Object.keys(entry[j])[0];
+                if (Metrics[key]) {
+                  Metrics[key].push(entry[j][key]);
+                }
+              }
+            }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = Metrics[key].reverse();
+            }
+            transformed.Cyclo = {
+              timestamp: dates.reverse(),
+              data: Metrics
+            };
+          }
+        });
+        computedData.value = transformed;
+        showBenchmarkDialog.value = true;
       } catch (error) {
         console.error('Error sending data to backend:', error);
         return false;
       }
     };
+
+
 
     const handleBenchmarkSubmit = async () => {
       showBenchmarkDialog.value = false; // close the dialog
@@ -281,7 +466,6 @@ export default {
       showFormAgain,
       checkGitHubRepoExists,
       isValidRepo,
-      availableMetrics,
       computedData,
       benchmarks,
       tagsData,
@@ -292,6 +476,7 @@ export default {
       benchmarkInputs,
       handleBenchmarkSubmit,
       showBenchmarkLines,
+      selectedMetrics,
     };
   },
 };

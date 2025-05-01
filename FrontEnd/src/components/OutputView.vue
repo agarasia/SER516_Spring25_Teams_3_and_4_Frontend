@@ -1,56 +1,74 @@
 <template>
-  <div class="page-container">
+  <div class="metrics-guide-container">
     <button class="back-button" @click="$emit('goBack')">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="arrow-icon"
-      >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="arrow-icon">
         <line x1="20" y1="12" x2="4" y2="12"></line>
         <polyline points="10 18 4 12 10 6"></polyline>
       </svg>
+      Back
     </button>
-
-    <!-- snapshot card -->
-    <div class="cards-container">
-      <div
-        v-for="card in snapshotCards"
-        :key="card.metric.value"
-        class="card"
-      >
-        <h3>{{ card.metric.label }}</h3>
-
-        <div class="card-body">
-          <div
-            class="card-row"
-            v-for="row in card.rows"
-            :key="row.label"
-          >
-            <span class="label">{{ row.label }}:</span>
-            <span class="value">{{ row.value }}</span>
+    <!-- Metrics Content -->
+    <div class="metrics-guide-box-1">
+      <p class="metrics-guide-heading">Results</p>
+      <hr style="width: 3.8%; margin-left: 1.45em; height: 2px; background-color: #4A6C8B;">
+      <table style="width: 100%; margin-top: 0em; margin-left:-1em">
+        <td style="width: 20%; padding-right: 2em; padding-left: 2em;">
+          <!-- Sidebar -->
+          <div class="sidebar">
+            <h3>Toggle Metrics</h3><br>
+            <ul>
+              <li :class="{ active: selectedMetric === 'All' }" @click="filterByMetric('All')">
+                All Metrics
+              </li>
+              <li v-for="metric in availableMetrics" :key="metric.value"
+                :class="{ active: selectedMetric === metric.label }" @click="filterByMetric(metric.label)">
+                {{ metric.label }}
+              </li>
+            </ul>
           </div>
-        </div>
-      </div>
-    </div>
+        </td>
+        <td style="padding-left: 2em;">
+          <p id="metrics-guide-overview" style="font-weight: 500;">
+            The Metrics Dashboard provides an interactive visualization of key software quality metrics over time. Use
+            the date range selector above to filter data and focus on specific time periods.<br><br>Toggle metrics from
+            the
+            sidebar to customize your view-select individual metrics or use "Select All" to display everything at once.
+            Each chart shows the trend of different quality indicators, helping you identify patterns, track
+            improvements, and pinpoint areas that need attention.
+            <br><br>This data-driven approach enables teams to make
+            informed decisions about code quality, prioritize refactoring efforts, and measure the impact of development
+            practices over time.
 
-    <!-- history chart -->
-    <div class="chart-container" v-if="chartData.labels.length">
-      <Line :data="chartData" :options="chartOptions" />
+          </p>
+
+          <div class="metrics-guide-box" style="margin-left: -2.7%; border: 0; box-shadow: none;">
+            <div v-for="metric in displayedMetrics" :key="metric.value" class="chart-container">
+              <h3 class="chart-heading">{{ metric.label }}</h3>
+              <div class="chart-content">
+                <Line :data="getChartData(metric.value)" :options="chartOptions" />
+              </div>
+            </div>
+          </div>
+        </td>
+      </table>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { Line } from 'vue-chartjs';
 import {
-  Chart as ChartJS, Title, Tooltip, Legend,
-  LineElement, CategoryScale, LinearScale, PointElement, Filler
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Filler
 } from 'chart.js';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, Filler);
@@ -58,253 +76,455 @@ ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale
 export default {
   name: 'OutputView',
   props: {
-    computedData: Object,
-    benchmarks: Object,
-    showBenchmarkLines: Object
+    computedData: Object, // Metrics data passed from HomeScreen.vue
+    benchmarks: Object, // Benchmark data
+    showBenchmarkLines: Object // Whether to show benchmark lines
+  },
+  components: {
+    Line
   },
   setup(props) {
-    const METRICS = [
-      {
-        value: 'LCOM4',
-        label: 'LCOM4',
-        benchmarkKey: 'lcom4_benchmark',
-        currentKey: 'current_lcom4',
-        historyKey: 'lcom4_history',
-        classScoped: true
-      },
-      {
-        value: 'LCOMHS',
-        label: 'LCOMHS',
-        benchmarkKey: 'lcomhs_benchmark',
-        currentKey: 'current_lcomhs',
-        historyKey: 'lcomhs_history',
-        classScoped: true
-      },
-      {
-        value: 'DefectScore',
-        label: 'Defect Score',
-        benchmarkKey: 'defect_score_benchmark',
-        currentKey: 'current_defect_score',
-        historyKey: 'defect_score_history',
-        classScoped: false
-      },
-      {
-        value: 'AfferentCoupling',
-        label: 'Afferent Coupling',
-        benchmarkKey: 'afferent_coupling_benchmark',
-        currentKey: 'current_afferent',
-        historyKey: 'afferent_history',
-        classScoped: true
-      },
-      {
-        value: 'EfferentCoupling',
-        label: 'Efferent Coupling',
-        benchmarkKey: 'efferent_coupling_benchmark',
-        currentKey: 'current_efferent',
-        historyKey: 'efferent_history',
-        classScoped: true
-      },
-      {
-        value: 'DefectDensityAnalysis',
-        label: 'Defect Density Analysis',
-        benchmarkKey: 'defect_density_analysis_benchmark',
-        currentKey: 'current_defect_density',
-        historyKey: 'defect_density_history',
-        classScoped: false
-      },
-      {
-        value: 'Instability',
-        label: 'Instability',
-        benchmarkKey: 'instability_benchmark',
-        currentKey: 'current_instability',
-        historyKey: 'instability_history',
-        classScoped: true
-      }
+    const metric = [
+      { value: 'CC', label: 'Code Churn', dataDict: true },
+      { value: 'LOC', label: 'Lines of Code', dataDict: false },
+      { value: 'ICI', label: 'Interface Change Impact', dataDict: true },
+      { value: 'MTTR', label: 'Mean Time to Repair', dataDict: false },
+      { value: 'DefectsOverTime', label: 'Defects Over Time', dataDict: true },
+      { value: 'Cyclo', label: 'Cyclomatic Complexity', dataDict: true },
+      { value: 'Halstead', label: 'Halstead Complexity', dataDict: true }
     ];
 
-    const selectedMetric = ref(METRICS[0].value);
-    const selectedClass = ref('');
-
+    // Filter metrics based on availability in computedData
     const availableMetrics = computed(() =>
-      METRICS.filter(m => !!props.computedData[m.value])
+      metric.filter((m) => props.computedData[m.value])
     );
 
-    const hasClassData = computed(() =>
-      METRICS.find(m => m.value === selectedMetric.value)?.classScoped === true
-    );
+    const selectedMetrics = ref(availableMetrics.value.map((m) => m.value));
 
-    watch(availableMetrics, ms => {
-      if (!ms.find(m => m.value === selectedMetric.value)) {
-        selectedMetric.value = ms[0]?.value ?? '';
-      }
+    const selectedMetric = ref('All');
+
+    const displayedMetrics = computed(() => {
+      return availableMetrics.value.filter((metric) => selectedMetrics.value.includes(metric.value));
     });
 
-    const classNames = computed(() => {
-      if (!hasClassData.value) return [];
+    function toggleMetric(metricValue) {
+      if (selectedMetrics.value.includes(metricValue)) {
+        selectedMetrics.value = selectedMetrics.value.filter((m) => m !== metricValue);
+      } else {
+        selectedMetrics.value.push(metricValue);
+      }
+    }
 
-      const metric = METRICS.find(m => m.value === selectedMetric.value);
-      const curArr = props.computedData[selectedMetric.value]?.[metric.currentKey]?.data;
+    // Select all metrics
+    function selectAllMetrics() {
+      selectedMetrics.value = availableMetrics.value.map((m) => m.value);
+    }
 
-      if (!Array.isArray(curArr)) return [];
+    // Filter metrics by category
+    function filterByMetric(value) {
+      selectedMetric.value = value;
 
-      const names = curArr
-        .map(e => e.class_name)
-        .filter(n => !!n);
+      if (value === 'All') {
+        // If "All" is selected, include all available metrics
+        selectedMetrics.value = availableMetrics.value.map((m) => m.value);
+      } else {
+        // If a specific metric is selected, ensure only that metric is in the selectedMetrics array
+        selectedMetrics.value = [availableMetrics.value.find((m) => m.label === value).value];
+      }
+    }
 
-      return Array.from(new Set(names));
+    const timestamps = computed(() => {
+      const timestamps = [];
+
+      for (const m of availableMetrics.value) {
+        timestamps.push(props.computedData[m.value]["timestamp"]);
+        break;
+      }
+      return timestamps;
     });
 
-    watch(classNames, names => {
-      if (names.length && !names.includes(selectedClass.value)) {
-        selectedClass.value = names[0];
-      }
-    });
-
-    function currentData(metricVal) {
-      const metric = METRICS.find(m => m.value === metricVal);
-      return props.computedData[metricVal]?.[metric.currentKey];
+    function formatLabel(label) {
+      return label
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
     }
 
-    function historyData(metricVal) {
-      const metric = METRICS.find(m => m.value === metricVal);
-      return metric.historyKey
-        ? props.computedData[metricVal]?.[metric.historyKey] ?? []
-        : [];
-    }
-
-    const snapshotCards = computed(() =>
-      availableMetrics.value.map(m => ({
-        metric: m,
-        rows: rowsFor(m.value)
-      })).filter(c => c.rows.length)
-    );
-
-    function rowsFor(metricVal) {
-      const cur = currentData(metricVal);
-      if (!cur) return [];
-
-      const metric = METRICS.find(m => m.value === metricVal);
-
-      if (metric.classScoped && Array.isArray(cur.data)) {
-        let row = cur.data.find(d => d.class_name === selectedClass.value);
-        if (!row && cur.data.length) row = cur.data[0];
-        if (!row) return [];
-        return [{ label: row.class_name, value: row.score }];
-      }
-
-      if (typeof cur === 'number' || typeof cur.data === 'number') {
-        const val = typeof cur === 'number' ? cur : cur.data;
-        return [{ label: 'Value', value: val }];
-      }
-
-      const src = cur.data ?? cur;
-      return Object.entries(src)
-        .filter(([, v]) => typeof v === 'number')
-        .map(([k, v]) => ({ label: k.replace(/_/g, ' '), value: v }));
-    }
-
-    const chartData = computed(() => {
-      const hist = historyData(selectedMetric.value);
-      const cur = currentData(selectedMetric.value);
-
-      const pts = [];
-      const push = (ts, series, val) => pts.push({ ts, series, val });
-
-      hist.forEach(h => {
-        if (Array.isArray(h.data)) {
-          const row = h.data.find(r =>
-            !hasClassData.value || r.class_name === selectedClass.value);
-          if (row) push(h.timestamp, 'score', row.score);
-        } else if (typeof h.data === 'object') {
-          Object.entries(h.data)
-            .filter(([, v]) => typeof v === 'number')
-            .forEach(([k, v]) => push(h.timestamp, k, v));
-        }
-      });
-
-      if (cur) {
-        if (Array.isArray(cur.data)) {
-          const row = cur.data.find(r =>
-            !hasClassData.value || r.class_name === selectedClass.value);
-          if (row) push(cur.timestamp, 'score', row.score);
-        } else if (typeof cur === 'number' || typeof cur.data === 'number') {
-          const val = typeof cur === 'number' ? cur : cur.data;
-          push(cur.timestamp, 'value', val);
+    function getGraphLabels() {
+      const labels = {};
+      for (const m of availableMetrics.value) {
+        if (m.dataDict) {
+          const metricData = props.computedData[m.value];
+          if (metricData && metricData.data && typeof metricData.data === 'object') {
+            // Format each key: replace _ with space and capitalize words
+            labels[m.value] = Object.keys(metricData.data).map(formatLabel);
+          } else {
+            labels[m.value] = [];
+          }
         } else {
-          const src = cur.data ?? cur;
-          Object.entries(src)
-            .filter(([, v]) => typeof v === 'number')
-            .forEach(([k, v]) => push(cur.timestamp, k, v));
+          // For non-dictionary metrics, format the metric label as well
+          labels[m.value] = [formatLabel(m.label)];
         }
       }
+      return labels;
+    }
 
-      const labels = Array.from(new Set(pts.map(p => p.ts)))
-        .sort()
-        .map(ts => new Date(ts).toLocaleString());
+    // Create a computed ref for reactive access
+    const graphLabels = computed(() => getGraphLabels());
 
-      const seriesMap = {};
-      pts.forEach(p => {
-        if (!seriesMap[p.series]) seriesMap[p.series] = Array(labels.length).fill(null);
-        const idx = labels.indexOf(new Date(p.ts).toLocaleString());
-        seriesMap[p.series][idx] = p.val;
-      });
+    function getGraphData() {
+      const data = {};
 
-      const datasets = Object.entries(seriesMap).map(([name, data], i) => {
-        const palette = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta'];
-        const baseColor = palette[i % palette.length];
+      for (const m of availableMetrics.value) {
+        const metricData = props.computedData[m.value];
 
-        const radii = data.map((_, idx) => idx === data.length - 1 ? 6 : 2);
-        const bgColors = data.map((_, idx) =>
-          idx === data.length - 1 ? "orange" : baseColor);
+        if (m.dataDict) {
+          if (metricData && metricData.data && typeof metricData.data === 'object') {
+            data[m.value] = Object.values(metricData.data);
+          } else {
+            data[m.value] = [];
+          }
+        } else {
+          // For non-dictionary metrics, data is a primitive
+          if (metricData && metricData.data !== undefined) {
+            data[m.value] = [metricData.data]; // wrap in array for consistency
+          } else {
+            data[m.value] = [];
+          }
+        }
+      }
+      return JSON.parse(JSON.stringify(data));
+    }
 
-        return {
-          label: name.replace(/_/g, ' '),
-          data,
-          borderColor: baseColor,
-          backgroundColor: 'rgba(0,0,0,0.05)',
-          pointBorderColor: baseColor,
-          pointBackgroundColor: bgColors,
-          pointRadius: radii,
-          pointStyle: 'circle',
-          borderDash: [0, 0],
-          fill: true
-        };
-      });
+    // Reactive/computed graph data
+    const graphData = computed(() => getGraphData());
 
-      if (props.benchmarks[selectedMetric.value] && props.showBenchmarkLines[selectedMetric.value]) {
+    function getChartData(metricValue) {
+      const labels = graphLabels.value[metricValue];
+      const data = graphData.value[metricValue];
+      console.log('Graph Data:', data);
+      let datasets = [];
+
+      // Predefined list of colors
+      const colors = [
+        { borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 1)' }, // Teal
+        { borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 1)' }, // Red
+        { borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 1)' }, // Blue
+        { borderColor: 'rgba(255, 206, 86, 1)', backgroundColor: 'rgba(255, 206, 86, 1)' }, // Yellow
+        { borderColor: 'rgba(153, 102, 255, 1)', backgroundColor: 'rgba(153, 102, 255, 1)' }, // Purple
+        { borderColor: 'rgba(255, 159, 64, 1)', backgroundColor: 'rgba(255, 159, 64, 1)' }, // Orange
+        { borderColor: 'rgba(0, 128, 0, 1)', backgroundColor: 'rgba(0, 128, 0, 1)' } // Green
+      ];
+
+      for (let i = 0; i < labels.length; i++) {
+        const colorIndex = i % colors.length;
         datasets.push({
-          label: 'Benchmark',
-          data: Array(labels.length).fill(props.benchmarks[selectedMetric.value]),
-          borderColor: 'green',
-          borderDash: [5, 5],
-          pointRadius: Array(labels.length).fill(0),
-          pointBorderColor: 'green',
-          pointBackgroundColor: Array(labels.length).fill('rgba(0,0,0,0)'),
-          backgroundColor: 'rgba(0,0,0,0.05)',
-          pointStyle: 'circle',
-          fill: false
+          label: labels[i],
+          data: data[i],
+          fill: false,
+          borderColor: colors[colorIndex].borderColor,
+          backgroundColor: colors[colorIndex].backgroundColor,
+          tension: 0.4
         });
       }
+      return {
+        labels: timestamps.value[0],
+        datasets: datasets
+      };
+    }
 
-      return { labels, datasets };
-    });
-
-    const chartOptions = { responsive: true, plugins: { legend: { display: true } } };
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true
+        },
+        title: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    };
 
     return {
-      selectedMetric,
-      selectedClass,
+      metric,
       availableMetrics,
-      hasClassData,
-      classNames,
-      snapshotCards,
-      chartData,
-      chartOptions
+      selectedMetrics,
+      selectedMetric,
+      displayedMetrics,
+      toggleMetric,
+      selectAllMetrics,
+      filterByMetric,
+      graphLabels,
+      graphData,
+      getChartData,
+      chartOptions,
+      timestamps,
+      Line,
     };
   }
 };
 </script>
 
 <style scoped>
-/* Existing styles remain unchanged */
+.page-container {
+  padding: 20px;
+  background-color: #f4f4f5;
+  border-radius: 8px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #4a6c8b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 50px 20px 20px 20px;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #3a5670;
+}
+
+.arrow-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.metric-item {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.metric-item p {
+  margin: 5px 0;
+}
+
+.layout-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  /* Ensure the layout container spans the full width */
+}
+
+.side-panel {
+  width: 20%;
+  /* Adjust the width of the side panel */
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1em;
+  border: 1px solid #ddd;
+}
+
+.toggle-item {
+  margin-bottom: 10px;
+}
+
+.visualization-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  width: 80%;
+  /* Adjust the width of the visualization container */
+}
+
+.chart-container {
+  width: 100%;
+  /* Ensure the chart container spans the full width of its parent */
+  max-width: 800px;
+  /* Optional: Set a max width for better readability */
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2em;
+  border: 1px solid #ddd;
+  gap: 10px;
+  margin-bottom: 2em;
+}
+
+.chart-heading {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.chart-content {
+  width: 100%;
+  height: 100%;
+}
+
+.main-content {
+  border-radius: 10px;
+  background-color: #fefffe;
+  width: 100%;
+  /* Ensure the main content spans the full width */
+  padding: 2em;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.metrics-guide-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* Align content to the top */
+  background-color: #f5f5f5;
+  /* Optional: Add a light background color */
+  /* padding-top: 5em; Ensure consistent space at the top */
+  padding-bottom: 5em;
+  /* Ensure consistent space at the bottom */
+  min-height: 100vh;
+  /* Ensure the container takes at least the full viewport height */
+  box-sizing: border-box;
+  /* Include padding in the height calculation */
+}
+
+.metric-heading-container {
+  display: flex;
+  margin-bottom: 1em;
+  /* Space below the heading */
+}
+
+#metrics-guide-overview {
+  font-size: 1.2em;
+  color: #555;
+  /* Optional: Change text color */
+  margin-top: 2.5em;
+  /* Space above the paragraph */
+  margin-bottom: 4em;
+  /* Space below the paragraph */
+  margin-right: 2em;
+  /* Space to the right */
+}
+
+.metrics-guide-heading {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #333;
+  /* Optional: Change text color */
+  margin-bottom: -0.4em;
+  margin-left: 0.5em;
+  /* Space below the heading */
+}
+
+.metrics-guide-box-1 {
+  width: 85vw;
+  /* Optional: Limit the maximum width */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+  margin: 3em;
+  padding-left: 1.5em;
+  background-color: #fff;
+  /* Optional: Add a white background for contrast */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Optional: Add a subtle shadow */
+}
+
+.metrics-guide-box {
+  width: auto;
+  max-width: 1200px;
+  /* Optional: Limit the maximum width */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+  margin: 3em;
+  padding-left: 1.5em;
+  background-color: #fff;
+  /* Optional: Add a white background for contrast */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Optional: Add a subtle shadow */
+}
+
+.metric-heading {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  /* Optional: Change text color */
+  margin-bottom: -0.4em;
+  /* Space below the heading */
+}
+
+.important-considerations {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.important-header {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.important-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.sidebar {
+  width: 100%;
+  margin-top: 3em;
+  font-size: small;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.sidebar li:hover {
+  background-color: #f5f5f5;
+}
+
+.sidebar li.active {
+  background-color: #4A6C8B;
+  color: #fff;
+}
+
+.category-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
 </style>
