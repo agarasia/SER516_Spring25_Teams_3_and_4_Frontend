@@ -51,7 +51,6 @@
                 <input type="checkbox" value="fogindex" v-model="selectedMetrics" @change="handleMetricChange" />
                 Fog Index
             </label>
-
             <label>
                 <input type="checkbox" value="lcom4" v-model="selectedMetrics" @change="handleMetricChange" />
                 LCOM4
@@ -74,10 +73,8 @@
       <div class="input-container2" v-if="isValidRepo">
         <label>All metrics will be calculated automatically.</label>
       </div>
-
-    </div>
-    <br />
-    <br /> -->
+      <br />
+      <br /> -->
       <button @click="submitData" :disabled="!isValidRepo">
         {{ buttonText }}
       </button>
@@ -107,18 +104,26 @@
             </div>
           </div>
         </div>
+      <div class="button-container">
+        <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
       </div>
+    </div>
 
       <div class="button-container">
         <button @click="handleBenchmarkSubmit()">Apply/Continue</button>
       </div>
-      <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
-        v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
     </div>
-
     <!-- Show Output Screen After Validation -->
-    <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
-      v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
+    <OutputView
+      :computedData="computedData"
+      :benchmarks="benchmarks"
+      :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput"
+      @goBack="showFormAgain"
+      @updateBenchmarks="postBenchmarks"
+    />
+    <LoadingSpinner v-if="isLoading" />
+
   </main>
   <!-- Footer Section -->
   <footer class="footer" v-if="!showOutput">
@@ -134,10 +139,12 @@ import { ref, reactive, watch } from 'vue';
 import axios from 'axios';
 import TagInput from './TagInput.vue';
 import OutputView from './OutputView.vue';
+import LoadingSpinner from './LoadingSpinner.vue';
+
 
 export default {
   name: 'HomeScreen',
-  components: { TagInput, OutputView },
+  components: { TagInput, OutputView, LoadingSpinner },
   setup() {
     const githubUrl = ref('');
     const selectedMetrics = ref([]);
@@ -162,15 +169,18 @@ export default {
     };
 
     const checkGitHubRepoExists = async () => {
+      isLoading.value = true;
       isValidRepo.value = false;
 
       if (!githubUrl.value) {
         errorMessages.githubUrl = 'Repository URL cannot be empty.';
+        isLoading.value = false;
         return;
       }
 
       if (!isValidGitHubUrl(githubUrl.value)) {
         errorMessages.githubUrl = 'Invalid GitHub URL format.';
+        isLoading.value = false;
         return;
       }
 
@@ -181,6 +191,7 @@ export default {
         const response = await fetch(apiUrl);
         if (!response.ok) {
           errorMessages.githubUrl = 'GitHub repository does not exist.';
+          isLoading.value = false;
           return;
         }
         const files = await response.json();
@@ -188,32 +199,36 @@ export default {
         if (!keys.includes('Java')) {
           errorMessages.githubUrl =
             'The repository does not have a Java project.';
+            isLoading.value = false;
           return;
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
-        // Finally, add repo to shared volume.
-        const req = githubUrl.value.toLowerCase();
-         const res = await axios.post(
-           'http://localhost:8080/add_repo',
-           { repo_url: req },
-           {
-             headers: {
-               'Content-Type': 'application/json',
-               'Access-Control-Allow-Origin': '*',
-               mode: 'cors',
-             },
-           }
-         );
-         console.log('Response from backend:', res.data);
-         if (res.status === 200) {
-           console.log('Repository added successfully.');
-         } else {
-           console.error('Failed to add repository.');
-         }
+
+        const req = githubUrl.value;
+        const res = await axios.post(
+          'http://localhost:8080/add_repo',
+          { repo_url: req },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              mode: 'cors',
+            },
+          }
+        );
+        console.log('Response from backend:', res.data);
+        if (res.status === 200) {
+          console.log('Repository added successfully.');
+        } else {
+          console.error('Failed to add repository.');
+        }
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
+        isLoading.value = false;
+        return;
       }
+      isLoading.value = false;
     };
 
     const submitData = async () => {
@@ -235,14 +250,13 @@ export default {
 
       try {
         const metrics = selectedMetrics.value;
-        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`.toLowerCase();
-
+        const req = `http://localhost:8080/get_metrics?repo_url=${githubUrl.value}&metrics=${metrics}`;
         const { data } = await axios.get(req);
         console.log('Response from backend:', data);
         const transformed = {};
         (data.metrics_data ?? []).forEach(group => {
-            if (Array.isArray(group.cc) && group.cc.length) {
-                
+          if (Array.isArray(group.cc) && group.cc.length) {
+
             const cc = group.cc;
             let dates = [];
             let added_lines_list = [];
@@ -287,35 +301,35 @@ export default {
             };
           }
 
-            if (Array.isArray(group.mttr) && group.mttr.length) {
-                const mttrArr = group.mttr;
+        if (Array.isArray(group.mttr) && group.mttr.length) {
+            const mttrArr = group.mttr;
 
-                const dates: number[] = [];
-                const mttrValues: number[] = [];
+            const dates: number[] = [];
+            const mttrValues: number[] = [];
 
-                mttrArr.forEach(item => {
-                    let value = 0.0;
+            mttrArr.forEach(item => {
+                let value = 0.0;
 
-                    if (
-                        item.data &&
-                        typeof item.data === 'object' &&
-                        item.data.error === null &&
-                        typeof item.data.mttr === 'number'
-                    ) {
-                        value = item.data.mttr;                                     
-                    }
+                if (
+                    item.data &&
+                    typeof item.data === 'object' &&
+                    item.data.error === null &&
+                    typeof item.data.mttr === 'number'
+                ) {
+                    value = item.data.mttr;                                     
+                }
 
-                    dates.push(item.timestamp);                                   
-                    mttrValues.push(value);                                        
-                });
+                dates.push(item.timestamp);                                   
+                mttrValues.push(value);                                        
+            });
 
-                transformed.MTTR = {
-                    timestamp: dates.reverse(),    // newest first
-                    data: {
-                        score: mttrValues.reverse()
-                    }
-                };
-            }
+            transformed.MTTR = {
+                timestamp: dates.reverse(),
+                data: {
+                    score: mttrValues.reverse()
+                }
+            };
+        }
 
 
           if (Array.isArray(group['defects-over-time']) && group['defects-over-time'].length) {
@@ -361,41 +375,49 @@ export default {
             };
           }
 
-      
-            if (Array.isArray(group.hal) && group.hal.length) {
-                const hal = group.hal;
+          if (Array.isArray(group.hal) && group.hal.length) {
+            const halData = group.hal;
+            let keys = [];
+            let dates = [];
+            const sum = halData[0].data.find(e => e.Summary)?.Summary;
+            keys = Object.keys(sum);
+            let metrics = {};
+            console.log('Keys:', keys);
 
-                const dates = [];
-                const difficultyList= [];
-                const effortList = [];
-
-                hal.forEach(item => {
-                    let metrics: Record<string, any> = {};
-
-                    if (Array.isArray(item.data)) {
-                        const summary = item.data.find(e => e.Summary)?.Summary;
-                        const firstFile = item.data.find(e => e.metrics)?.metrics;
-                        metrics = summary ?? firstFile ?? {};
-                    }
-
-                    dates.push(item.timestamp);        
-                    difficultyList.push(                                           
-                        metrics['Total Difficulty'] ?? metrics.Difficulty
-                    );
-                    effortList.push(                                               
-                        metrics['Total Efforts'] ?? metrics.Effort
-                    );
-                });
-
-                transformed.Halstead = {
-                    timestamp: dates.reverse(),         
-                    data: {
-                        difficulty: difficultyList.reverse(),
-                        effort: effortList.reverse(),
-
-                    }
-                };
+            for (let i = 0; i < halData.length; i++) {
+              dates.push(halData[i].timestamp);
             }
+
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = [];
+            }
+
+            const entry = halData[0].data.find(e => e.Summary)?.Summary;
+            for (let i = 0; i < halData.length; i++) {
+              const entry = halData[i].data.find(e => e.Summary)?.Summary;
+              for (let j = 0; j < keys.length; j++) {
+                const key = keys[j];
+                metrics[key].push(entry[key]);
+              }
+            }
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              metrics[key] = metrics[key].reverse();
+            }
+
+            transformed.Halstead = {
+              timestamp: dates.reverse(),
+              data: {
+                difficulty: metrics['Total Difficulty'],
+                effort: metrics['Total Efforts'],
+                volume: metrics['Total Program Volume'],
+                vocabulary: metrics['Total Program Vocabulary'],
+                length: metrics['Total Program Length']
+              }
+            };
+            console.log('Halstead:', transformed.Halstead);
+          }
 
            if (Array.isArray(group['defects-stats']) && group['defects-stats'].length) {
                 const stats = group['defects-stats'];
@@ -468,6 +490,7 @@ export default {
                 const pctComplexWordsList = [];
                 const totalFilesList = [];
                 const avgSentenceLengthList = [];
+                const fogIndexVal = []
 
                 fogArr.forEach(item => {
                     const d = Array.isArray(item.data) && item.data.length ? item.data[0] : null;
@@ -477,6 +500,7 @@ export default {
                     pctComplexWordsList.push(d.percentageComplexWords);
                     totalFilesList.push(d.totalFiles);
                     avgSentenceLengthList.push(d.averageSentenceLength);
+                    fogIndexVal.push(d.fogIndex);
                 });
 
                 transformed.FogIndex = {
@@ -485,45 +509,54 @@ export default {
                         fog_index: fogindexactual.reverse(),
                         pct_complex_words: pctComplexWordsList.reverse(),
                         total_files: totalFilesList.reverse(),
-                        avg_sentence_length: avgSentenceLengthList.reverse()
+                        avg_sentence_length: avgSentenceLengthList.reverse(),
+                        fog_index: fogIndexVal.reverse()
                     }
                 };
 
 
             }
           if (Array.isArray(group.cyclo) && group.cyclo.length) {
-            const cyclo = group.cyclo;
-              let metrics = {};
+            const cD = group.cyclo;
+            let keys = [];
+            let dates = [];
+            let Metrics = {};
 
-            const dates  = [];
-            const totalCyclomaticList = [];
+            for (let i = 0; i < cD.length; i++) {
+              dates.push(cD[i].timestamp);
+            }
 
-              cyclo.forEach(item => {
-                  let metrics: Record<string, any> = {};
+            cD[0].data.forEach(entry => {
+              for (const [key, value] of Object.entries(entry)) {
+                if (typeof value === 'number') {
+                  keys.push(key);
+                }
+              }
+            })
 
-                  if (Array.isArray(item.data)) {
-                      item.data.forEach(entry => {
-                          for (const [key, value] of Object.entries(entry)) {
-                              if (typeof value === 'number') {
-                                  metrics[key] = value;
-                              }
-                          }
-                      });
-                  }
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = [];
+            }
 
-                  dates.push(item.timestamp);                                 
-                  totalCyclomaticList.push(                                   
-                      metrics['total cyclomatic complexity']
-                  );
-              });
+            for (let i = 0; i < cD.length; i++) {
+              const entry = cD[i].data;
+              for (let j = 0; j < entry.length; j++) {
+                const key = Object.keys(entry[j])[0];
+                if (Metrics[key]) {
+                  Metrics[key].push(entry[j][key]);
+                }
+              }
+            }
 
-              transformed.Cyclo = {
-                  timestamp: dates.reverse(),
-                  data: {
-                      total_cyclomatic_complexity: totalCyclomaticList.reverse(),
-
-                  }
-              };
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+              Metrics[key] = Metrics[key].reverse();
+            }
+            transformed.Cyclo = {
+              timestamp: dates.reverse(),
+              data: Metrics
+            };
           }
         });
         computedData.value = transformed;
