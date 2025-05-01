@@ -82,8 +82,16 @@
       </div>
     </div>
     <!-- Show Output Screen After Validation -->
-    <OutputView :computedData="computedData" :benchmarks="benchmarks" :showBenchmarkLines="showBenchmarkLines"
-      v-if="showOutput" @goBack="showFormAgain" @updateBenchmarks="postBenchmarks" />
+    <OutputView
+      :computedData="computedData"
+      :benchmarks="benchmarks"
+      :showBenchmarkLines="showBenchmarkLines"
+      v-if="showOutput"
+      @goBack="showFormAgain"
+      @updateBenchmarks="postBenchmarks"
+    />
+    <LoadingSpinner v-if="isLoading" />
+
   </main>
   <!-- Footer Section -->
   <footer class="footer" v-if="!showOutput">
@@ -99,10 +107,12 @@ import { ref, reactive, watch } from 'vue';
 import axios from 'axios';
 import TagInput from './TagInput.vue';
 import OutputView from './OutputView.vue';
+import LoadingSpinner from './LoadingSpinner.vue';
+
 
 export default {
   name: 'HomeScreen',
-  components: { TagInput, OutputView },
+  components: { TagInput, OutputView, LoadingSpinner },
   setup() {
     const githubUrl = ref('');
     const selectedMetrics = ref([]);
@@ -127,15 +137,18 @@ export default {
     };
 
     const checkGitHubRepoExists = async () => {
+      isLoading.value = true;
       isValidRepo.value = false;
 
       if (!githubUrl.value) {
         errorMessages.githubUrl = 'Repository URL cannot be empty.';
+        isLoading.value = false;
         return;
       }
 
       if (!isValidGitHubUrl(githubUrl.value)) {
         errorMessages.githubUrl = 'Invalid GitHub URL format.';
+        isLoading.value = false;
         return;
       }
 
@@ -146,6 +159,7 @@ export default {
         const response = await fetch(apiUrl);
         if (!response.ok) {
           errorMessages.githubUrl = 'GitHub repository does not exist.';
+          isLoading.value = false;
           return;
         }
         const files = await response.json();
@@ -153,6 +167,7 @@ export default {
         if (!keys.includes('Java')) {
           errorMessages.githubUrl =
             'The repository does not have a Java project.';
+            isLoading.value = false;
           return;
         }
         errorMessages.githubUrl = 'Valid GitHub Repository.';
@@ -178,7 +193,10 @@ export default {
         isValidRepo.value = true;
       } catch (error) {
         errorMessages.githubUrl = 'Error connecting to GitHub.';
+        isLoading.value = false;
+        return;
       }
+      isLoading.value = false;
     };
 
     const submitData = async () => {
